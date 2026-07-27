@@ -1,0 +1,25 @@
+{ "skeleton": { "images": "G:/My Drive/Freelance Jobs 2016 Onwards/CHEEZLES/Ani-mee LOCAL simon/Animee Anims Other/SkyWhales/images/" },
+"PhotoshopToSpine": { "scale": 1, "padding": 1, "trim": true },
+"bones": [
+	{ "name": "root" }
+],
+"slots": [
+	{ "name": "BODY", "bone": "root", "attachment": "BODY" },
+	{ "name": "TAIL", "bone": "root", "attachment": "TAIL" },
+	{ "name": "Flipper", "bone": "root", "attachment": "Flipper" }
+],
+"skins": {
+	"default": {
+		"BODY": {
+			"BODY": { "x": 541.5, "y": -285, "width": 771, "height": 200 }
+		},
+		"TAIL": {
+			"TAIL": { "x": 167.5, "y": -342, "width": 149, "height": 264 }
+		},
+		"Flipper": {
+			"Flipper": { "x": 604, "y": -443, "width": 82, "height": 222 }
+		}
+	}
+},
+"animations": { "animation": {} }
+}

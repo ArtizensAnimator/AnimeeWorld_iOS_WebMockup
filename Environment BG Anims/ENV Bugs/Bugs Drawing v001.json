@@ -1,0 +1,21 @@
+{ "skeleton": { "images": "G:/My Drive/Freelance Jobs 2016 Onwards/CHEEZLES/Ani-mee LOCAL simon/Animee Anims Other/ENV Bugs/images/" },
+"PhotoshopToSpine": { "scale": 1, "padding": 1, "trim": true },
+"bones": [
+	{ "name": "root" }
+],
+"slots": [
+	{ "name": "Butterfly_BODY", "bone": "root", "attachment": "Butterfly_BODY" },
+	{ "name": "Butterfly_WING", "bone": "root", "attachment": "Butterfly_WING" }
+],
+"skins": {
+	"default": {
+		"Butterfly_BODY": {
+			"Butterfly_BODY": { "x": 1517.5, "y": -2397, "width": 67, "height": 42 }
+		},
+		"Butterfly_WING": {
+			"Butterfly_WING": { "x": 1543, "y": -2378.5, "width": 60, "height": 69 }
+		}
+	}
+},
+"animations": { "animation": {} }
+}

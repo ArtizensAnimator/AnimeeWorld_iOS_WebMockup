@@ -1,0 +1,21 @@
+{ "skeleton": { "images": "G:/My Drive/Freelance Jobs 2016 Onwards/CHEEZLES/Ani-mee LOCAL simon/Animee Anims Other/MOUNTS/images/" },
+"PhotoshopToSpine": { "scale": 1, "padding": 1, "trim": true },
+"bones": [
+	{ "name": "root" }
+],
+"slots": [
+	{ "name": "PogoStick_Leg", "bone": "root", "attachment": "PogoStick_Leg" },
+	{ "name": "PogoStick_Body", "bone": "root", "attachment": "PogoStick_Body" }
+],
+"skins": {
+	"default": {
+		"PogoStick_Leg": {
+			"PogoStick_Leg": { "x": 134, "y": -226, "width": 38, "height": 228 }
+		},
+		"PogoStick_Body": {
+			"PogoStick_Body": { "x": 134, "y": -113, "width": 142, "height": 196 }
+		}
+	}
+},
+"animations": { "animation": {} }
+}

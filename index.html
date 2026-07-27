@@ -1,0 +1,3451 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+    <title>Spine Chibi Runner - Movement Demo</title>
+    <link rel="stylesheet" href="vendor/spine-player/spine-player.css">
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            font-family: sans-serif;
+            background-color: #222;
+            color: #eee;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0;
+            overflow: hidden;
+            /* Important for camera movement */
+        }
+
+        #game-wrapper {
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            /* Important for camera movement */
+            position: relative;
+            /* For camera positioning */
+            touch-action: none;
+        }
+
+        #game-board {
+            position: relative;
+            border: 0;
+            background-color: #4a525a;
+            /* A neutral background */
+            transform-origin: top left;
+            /* For screen shake */
+            touch-action: none;
+        }
+
+        #game-canvas {
+            display: block;
+            touch-action: none;
+        }
+
+        #player-container {
+            position: absolute;
+            pointer-events: none;
+            overflow: visible;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            /*border: 2px dotted #00ffff; /* color + thickness */
+            z-index: 50;
+            will-change: left, top, transform;
+        }
+
+        #joystick {
+            position: fixed;
+            width: 140px;
+            height: 140px;
+            display: none;
+            pointer-events: none;
+            z-index: 95;
+            transform: translate(-50%, -50%);
+        }
+
+        .joystick-base {
+            position: absolute;
+            inset: 0;
+            border: 3px solid rgba(255, 255, 255, 0.35);
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .joystick-thumb {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(102, 204, 255, 0.75);
+            box-shadow: 0 0 14px rgba(102, 204, 255, 0.6);
+            transform: translate(-50%, -50%);
+        }
+
+        #debug-info {
+            position: fixed;
+            top: 60px;
+            right: 10px;
+            width: 280px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-family: monospace;
+            padding: 8px 12px;
+            border-radius: 5px;
+            line-height: 1.5;
+            pointer-events: none;
+            z-index: 10;
+            font-size: 10px;
+        }
+
+        #ui-controls {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            max-height: calc(100vh - 20px);
+            overflow-y: auto;
+            box-sizing: border-box;
+            z-index: 100;
+            background: #333;
+            padding: 8px;
+            border: 1px solid #555;
+            border-radius: 5px;
+        }
+
+        #ui-controls button {
+            display: block;
+            width: 100%;
+        }
+
+        #ui-top-row {
+            display: flex;
+            gap: 6px;
+        }
+
+        #ui-top-row button {
+            width: auto;
+            flex: 1;
+            white-space: nowrap;
+        }
+
+        #ui-controls.ui-hidden {
+            overflow: visible;
+        }
+
+        #ui-controls.ui-hidden > :not(#ui-top-row) {
+            display: none !important;
+        }
+
+        #character-skin-menu {
+            margin-top: 8px;
+            padding-top: 6px;
+            border-top: 1px solid #444;
+            font-size: 10px;
+        }
+
+        #character-skin-menu summary {
+            padding: 4px 6px;
+            background: #222;
+            border: 1px solid #555;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        #skin-controls {
+            padding-top: 6px;
+            display: grid;
+            gap: 4px;
+        }
+
+        #hair-color-toggle {
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+        }
+
+        #hair-color-toggle input {
+            width: 12px;
+            height: 12px;
+            margin: 0;
+        }
+
+        #animation-controls {
+            margin-top: 6px;
+            display: grid;
+            gap: 4px;
+            font-size: 10px;
+        }
+
+        #mouse-tracker {
+            margin-top: 6px;
+            padding: 3px 6px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 3px;
+            font-size: 10px;
+            font-family: monospace;
+            pointer-events: none;
+        }
+
+        #animation-controls label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        #animation-controls select {
+            flex: 1;
+            min-width: 0;
+            background: #222;
+            color: #eee;
+            border: 1px solid #555;
+            padding: 2px 4px;
+            font-size: 10px;
+        }
+
+        #build-mode-btn,
+        #camera-tracking-btn,
+        #chair-tool-btn,
+        #door-tool-btn,
+        #add-text-btn,
+        #door-clear-btn,
+        #npc-toggle-btn,
+        #clear-platforms-btn,
+        #copy-platforms-btn,
+        #background-select {
+            margin-top: 6px;
+            font-size: 10px;
+        }
+
+        #build-mode-btn,
+        #camera-tracking-btn,
+        #chair-tool-btn,
+        #door-tool-btn,
+        #add-text-btn,
+        #door-clear-btn,
+        #npc-toggle-btn,
+        #clear-platforms-btn,
+        #copy-platforms-btn {
+            padding: 4px 6px;
+            background: #222;
+            color: #eee;
+            border: 1px solid #555;
+            cursor: pointer;
+        }
+
+        #build-add-tools {
+            position: fixed;
+            left: max(20px, env(safe-area-inset-left));
+            bottom: max(20px, env(safe-area-inset-bottom));
+            z-index: 110;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        #build-add-tools[hidden],
+        #build-add-menu[hidden],
+        #build-placement-status[hidden] {
+            display: none;
+        }
+
+        #build-placement-status {
+            position: fixed;
+            left: 50%;
+            bottom: max(24px, env(safe-area-inset-bottom));
+            z-index: 2000020;
+            transform: translateX(-50%);
+            max-width: min(420px, calc(100vw - 32px));
+            box-sizing: border-box;
+            padding: 10px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.86);
+            border-radius: 999px;
+            background: rgba(16, 25, 38, 0.94);
+            color: #fff;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55), 0 0 0 4px rgba(66, 199, 255, 0.2);
+            font: 800 13px/1.2 'Trebuchet MS', sans-serif;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        #build-add-btn {
+            width: 68px;
+            height: 68px;
+            padding: 0;
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            background: linear-gradient(145deg, #7ce2ff, #2588e8);
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.42), 0 0 0 4px rgba(64, 184, 255, 0.2);
+            cursor: pointer;
+            font: 300 48px/1 sans-serif;
+            text-align: center;
+            touch-action: manipulation;
+        }
+
+        #build-add-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.08);
+        }
+
+        #build-add-btn:focus-visible,
+        #build-add-menu button:focus-visible {
+            outline: 3px solid #ffe66d;
+            outline-offset: 3px;
+        }
+
+        #build-add-menu {
+            position: absolute;
+            left: 0;
+            bottom: calc(100% + 12px);
+            width: min(286px, calc(100vw - 28px));
+            max-height: min(68vh, 470px);
+            overflow-y: auto;
+            box-sizing: border-box;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            border-radius: 14px;
+            background: rgba(25, 30, 39, 0.96);
+            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+        }
+
+        .build-add-heading {
+            margin: 7px 4px 5px;
+            color: #9fdcff;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .build-add-heading:first-child {
+            margin-top: 1px;
+        }
+
+        #build-add-menu button {
+            display: block;
+            width: 100%;
+            margin: 4px 0;
+            padding: 9px 10px;
+            border: 1px solid #526070;
+            border-radius: 8px;
+            background: #222b36;
+            color: #f4f7fb;
+            cursor: pointer;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        #build-add-menu button:hover {
+            border-color: #72ccff;
+            background: #2c3c4d;
+        }
+
+        #build-remove-selected-btn {
+            border-color: #9a5360;
+            background: #482932;
+            color: #ffdbe1;
+        }
+
+        #build-remove-selected-btn:hover {
+            border-color: #ff91a4;
+            background: #60313d;
+        }
+
+        #build-layer-panel {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid #555;
+        }
+
+        #build-layer-panel[hidden] {
+            display: none;
+        }
+
+        #build-layer-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        #build-layer-controls button {
+            margin: 0;
+            text-align: center;
+            padding: 4px 6px;
+            background: #222;
+            color: #eee;
+            border: 1px solid #555;
+            cursor: pointer;
+        }
+
+        #build-layer-controls button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        #build-layer-status {
+            margin: 5px 2px 0;
+            color: #d8eaff;
+            font-size: 10px;
+            line-height: 1.35;
+        }
+
+        #bush-skin-control {
+            display: grid;
+            grid-template-columns: max-content 1fr;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+            font-size: 10px;
+        }
+
+        #bush-skin-control[hidden] {
+            display: none;
+        }
+
+        #bush-skin-select {
+            min-width: 0;
+            width: 100%;
+            padding: 3px 4px;
+            background: #222;
+            color: #eee;
+            border: 1px solid #555;
+            font-size: 10px;
+        }
+
+        #build-add-note {
+            margin: 8px 4px 2px;
+            color: #b9c2cd;
+            font-size: 10px;
+            line-height: 1.35;
+        }
+
+        @media (max-width: 600px) {
+            #build-add-tools {
+                left: max(14px, env(safe-area-inset-left));
+                bottom: max(14px, env(safe-area-inset-bottom));
+            }
+
+            #build-add-btn {
+                width: 58px;
+                height: 58px;
+                font-size: 42px;
+            }
+        }
+
+        .world-text-box {
+            position: absolute;
+            box-sizing: border-box;
+            z-index: 5;
+            pointer-events: none;
+            font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+        }
+
+        .world-text-box textarea {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 8px;
+            border: 0;
+            outline: 0;
+            resize: none;
+            overflow: hidden;
+            background: transparent;
+            color: #fff;
+            font: inherit;
+            line-height: 1.2;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.85);
+            pointer-events: none;
+        }
+
+        .world-text-box.editable {
+            pointer-events: auto;
+            outline: 2px dashed #66ccff;
+            background: rgba(0, 0, 0, 0.16);
+        }
+
+        .world-text-box.selected {
+            outline-color: #ffd54f;
+        }
+
+        .world-text-box.editable textarea {
+            pointer-events: auto;
+            overflow: auto;
+            background: rgba(0, 0, 0, 0.22);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+        }
+
+        .world-text-drag-handle {
+            display: none;
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: -22px;
+            height: 20px;
+            line-height: 20px;
+            box-sizing: border-box;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            background: rgba(0, 0, 0, 0.78);
+            color: #fff;
+            font-size: 11px;
+            text-align: center;
+            cursor: move;
+            user-select: none;
+        }
+
+        .world-text-resize-handle {
+            display: none;
+            position: absolute;
+            right: -7px;
+            bottom: -7px;
+            width: 14px;
+            height: 14px;
+            box-sizing: border-box;
+            border: 2px solid #111;
+            background: #66ccff;
+            cursor: nwse-resize;
+        }
+
+        .world-text-box.editable .world-text-drag-handle,
+        .world-text-box.editable .world-text-resize-handle {
+            display: block;
+        }
+
+        #background-select {
+            width: 140px;
+            background: #222;
+            color: #eee;
+            border: 1px solid #555;
+        }
+
+        #coin-counter {
+            position: fixed;
+            top: 16px;
+            left: 24px;
+            font-size: 40px;
+            font-weight: 700;
+            color: #ffd700;
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.9), 0 0 16px rgba(255, 255, 255, 0.6);
+            font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+            letter-spacing: 1px;
+            pointer-events: none;
+        }
+
+        #jetpack-bar {
+            position: absolute;
+            width: 120px;
+            height: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.45);
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+            display: none;
+        }
+
+        #jetpack-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            background: linear-gradient(90deg, #ffa500, #ffdb58);
+            width: 100%;
+        }
+
+        #sit-prompt {
+            position: absolute;
+            left: 50%;
+            bottom: calc(100% + var(--sit-prompt-offset-y, 50px));
+            transform: translate(calc(-50% + var(--sit-prompt-offset-x, 0px)), 0);
+            display: none;
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            font-size: 12px;
+            border: 1px solid #66ccff;
+            border-radius: 4px;
+            pointer-events: none;
+            z-index: 6;
+            white-space: nowrap;
+        }
+
+        .skin-row {
+            display: grid;
+            grid-template-columns: 16px max-content 16px 1fr 16px;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+        }
+
+        .skin-row span {
+            white-space: nowrap;
+        }
+
+        .skin-row button {
+            width: 16px;
+            height: 16px;
+            line-height: 12px;
+            padding: 0;
+            font-size: 10px;
+            background: #222;
+            color: #eee;
+            border: 1px solid #555;
+            cursor: pointer;
+        }
+
+        .skin-row button:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .skin-row input[type="text"] {
+            width: 120px;
+            background: #222;
+            border: 1px solid #555;
+            color: #eee;
+            padding: 2px 4px;
+            font-size: 10px;
+        }
+
+        .skin-row input[type="text"]:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .skin-row input[type="text"].invalid {
+            border-color: #b44;
+        }
+
+        /* Mount modes ----------------------------------------------------- */
+        #mount-mode-ui {
+            position: fixed;
+            top: max(8px, env(safe-area-inset-top));
+            left: 50%;
+            z-index: 1000010;
+            width: min(930px, calc(100vw - 190px));
+            transform: translateX(-50%);
+            pointer-events: none;
+        }
+
+        #mount-mode-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 7px;
+            overflow-x: auto;
+            padding: 3px 5px 8px;
+            scrollbar-width: none;
+            pointer-events: auto;
+        }
+
+        #mount-mode-buttons::-webkit-scrollbar {
+            display: none;
+        }
+
+        .mount-mode-btn,
+        #mount-return-btn {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            border: 2px solid rgba(255, 255, 255, 0.86);
+            border-radius: 50%;
+            color: #fff;
+            font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+            font-weight: 800;
+            text-align: center;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+            cursor: pointer;
+            touch-action: manipulation;
+            user-select: none;
+            transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+        }
+
+        .mount-mode-btn {
+            width: 68px;
+            height: 68px;
+            padding: 7px;
+            background: var(--mount-color, #607d8b);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.48), inset 0 0 0 2px rgba(0, 0, 0, 0.16);
+            font-size: 9px;
+            line-height: 1.05;
+        }
+
+        .mount-mode-btn:hover,
+        .mount-mode-btn:focus-visible,
+        #mount-return-btn:hover,
+        #mount-return-btn:focus-visible {
+            z-index: 1;
+            outline: 0;
+            filter: brightness(1.16);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 7px 20px rgba(0, 0, 0, 0.55), 0 0 0 4px rgba(255, 255, 255, 0.2);
+        }
+
+        .mount-mode-btn.is-active,
+        .mount-mode-btn.is-pending {
+            border-color: #fff6a6;
+            box-shadow: 0 0 0 4px rgba(255, 230, 80, 0.5), 0 7px 22px rgba(0, 0, 0, 0.6);
+        }
+
+        .mount-mode-btn.is-pending {
+            animation: mount-button-pulse 560ms ease-in-out infinite alternate;
+        }
+
+        #mount-return-btn {
+            width: 112px;
+            height: 112px;
+            margin: 4px auto 0;
+            padding: 16px;
+            background: linear-gradient(145deg, #ff6f61, #a7254d);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.58), inset 0 0 0 3px rgba(0, 0, 0, 0.14);
+            font-size: 14px;
+            line-height: 1.08;
+            pointer-events: auto;
+        }
+
+        #mount-return-btn[hidden] {
+            display: none;
+        }
+
+        #mount-world-visual {
+            position: absolute;
+            display: none;
+            box-sizing: border-box;
+            pointer-events: none;
+            will-change: left, top, transform;
+        }
+
+        #mount-world-visual.is-visible {
+            display: block;
+        }
+
+        .hover-car-layer {
+            position: absolute;
+            display: none;
+            object-fit: contain;
+            pointer-events: none;
+            transform-origin: 50% 100%;
+            will-change: left, top, transform;
+        }
+
+        .hover-car-layer.is-visible {
+            display: block;
+        }
+
+        .hover-car-layer.is-summoning {
+            animation: hover-car-arrive 360ms ease-out both;
+        }
+
+        .mount-art-layer {
+            position: absolute;
+            display: none;
+            pointer-events: none;
+            transform-origin: 50% 100%;
+            will-change: left, top, transform;
+        }
+
+        .mount-art-layer.is-visible {
+            display: block;
+        }
+
+        .mount-art-layer.is-summoning {
+            animation: hover-car-arrive 360ms ease-out both;
+        }
+
+        .mount-art-layer > img {
+            position: absolute;
+            pointer-events: none;
+            user-select: none;
+            will-change: transform;
+        }
+
+        .helicopter-propeller > img {
+            transform-origin: 50% 50%;
+            animation: helicopter-propeller-spin 150ms linear infinite;
+        }
+
+        .hover-car-glow {
+            position: absolute;
+            display: none;
+            border-radius: 50%;
+            background: radial-gradient(ellipse at center,
+                rgba(102, 226, 255, 0.78) 0%,
+                rgba(56, 189, 248, 0.42) 42%,
+                rgba(56, 189, 248, 0) 74%);
+            pointer-events: none;
+            transform-origin: 50% 50%;
+            will-change: left, top, transform;
+        }
+
+        .hover-car-glow.is-visible {
+            display: block;
+        }
+
+        .hover-car-glow::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: radial-gradient(ellipse at center top,
+                rgba(164, 241, 255, 0.96) 0%,
+                rgba(56, 189, 248, 0.65) 38%,
+                rgba(29, 142, 255, 0) 78%);
+            transform-origin: 50% 0%;
+            animation: hover-car-glow-pulse 680ms ease-in-out infinite alternate;
+            will-change: transform, opacity;
+        }
+
+        .hover-board-glow {
+            position: absolute;
+            display: none;
+            border-radius: 50%;
+            background: radial-gradient(ellipse at center,
+                rgba(222, 170, 255, 0.88) 0%,
+                rgba(182, 108, 255, 0.52) 40%,
+                rgba(115, 70, 255, 0) 76%);
+            pointer-events: none;
+            transform-origin: 50% 50%;
+            will-change: left, top, transform, opacity;
+        }
+
+        .hover-board-glow.is-visible {
+            display: block;
+            animation: hover-board-glow-pulse 720ms ease-in-out infinite alternate;
+        }
+
+        #mount-world-visual .mount-block {
+            position: absolute;
+            inset: 0;
+            box-sizing: border-box;
+            overflow: visible;
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            background: var(--mount-color, #607d8b);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.38), inset 0 -8px 0 rgba(0, 0, 0, 0.16);
+        }
+
+        #mount-world-visual .mount-label {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: rgba(255, 255, 255, 0.9);
+            font: 900 10px/1 'Trebuchet MS', sans-serif;
+            letter-spacing: 0.08em;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+            white-space: nowrap;
+        }
+
+        #mount-world-visual.is-summoning .mount-block {
+            animation: mount-arrive 360ms cubic-bezier(.2, 1.55, .5, 1) both;
+        }
+
+        #mount-world-visual[data-mount="skateboard"] .mount-block,
+        #mount-world-visual[data-mount="hoverboard"] .mount-block {
+            border-radius: 45% 45% 28% 28%;
+        }
+
+        #mount-world-visual[data-mount="skateboard"] .mount-block::before,
+        #mount-world-visual[data-mount="skateboard"] .mount-block::after {
+            content: '';
+            position: absolute;
+            bottom: -72%;
+            width: 16%;
+            aspect-ratio: 1;
+            box-sizing: border-box;
+            border: 2px solid rgba(255, 255, 255, 0.82);
+            border-radius: 50%;
+            background: radial-gradient(circle, #cbd5df 0 18%, #27313c 22% 62%, #10151b 66%);
+            box-shadow: 0 3px 4px rgba(0, 0, 0, 0.42);
+        }
+
+        #mount-world-visual[data-mount="skateboard"] .mount-block::before {
+            left: 17%;
+        }
+
+        #mount-world-visual[data-mount="skateboard"] .mount-block::after {
+            right: 17%;
+        }
+
+        #mount-world-visual[data-mount="skiis"] .mount-block {
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        #mount-world-visual[data-mount="skiis"] .mount-block::before,
+        #mount-world-visual[data-mount="skiis"] .mount-block::after {
+            content: '';
+            position: absolute;
+            left: 2%;
+            width: 96%;
+            height: 24%;
+            border: 2px solid rgba(225, 247, 255, 0.92);
+            border-radius: 75% 999px 999px 42%;
+            background: linear-gradient(180deg, #81e6ff 0%, #168bc7 58%, #075985 100%);
+            box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.24);
+        }
+
+        #mount-world-visual[data-mount="skiis"] .mount-block::before {
+            top: 16%;
+        }
+
+        #mount-world-visual[data-mount="skiis"] .mount-block::after {
+            bottom: 8%;
+        }
+
+        #mount-world-visual[data-mount="skiis"] .mount-label {
+            display: none;
+        }
+
+        #mount-world-visual[data-mount="hoverboard"] .mount-block {
+            box-shadow: 0 10px 18px var(--mount-glow), 0 17px 9px -10px var(--mount-glow), inset 0 -7px 0 rgba(0, 0, 0, 0.14);
+        }
+
+        #mount-world-visual[data-mount="sports-car"] .mount-block {
+            border-radius: 22px 42px 12px 12px;
+        }
+
+        #mount-world-visual[data-mount="sports-car"] .mount-block::before {
+            content: '';
+            position: absolute;
+            left: 25%;
+            top: -38%;
+            width: 49%;
+            height: 48%;
+            border: inherit;
+            border-bottom: 0;
+            border-radius: 12px 24px 0 0;
+            background: color-mix(in srgb, var(--mount-color) 72%, white);
+        }
+
+        #mount-world-visual[data-mount="sports-car"] .mount-block {
+            opacity: 0.95;
+        }
+
+        #mount-world-visual[data-mount="helicopter-hat"] .mount-block {
+            border-radius: 50% 50% 12px 12px;
+        }
+
+        #mount-world-visual[data-mount="helicopter-hat"] .mount-block::before {
+            content: '';
+            position: absolute;
+            left: -70%;
+            right: -70%;
+            top: -40%;
+            height: 18%;
+            border-radius: 999px;
+            background: #fff27a;
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+            animation: mount-rotor 180ms linear infinite;
+        }
+
+        #mount-world-visual[data-mount="lakitu-cloud"] .mount-block {
+            border-radius: 50%;
+            box-shadow: -28px 5px 0 -3px var(--mount-color), 28px 5px 0 -3px var(--mount-color),
+                0 12px 22px var(--mount-glow), inset 0 -8px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        #mount-world-visual[data-mount="mary-poppins-umbrella"] .mount-block {
+            overflow: visible;
+            border-radius: 50% 50% 8px 8px;
+            clip-path: polygon(50% 0, 100% 88%, 75% 73%, 50% 90%, 25% 73%, 0 88%);
+        }
+
+        #mount-world-visual[data-mount="mary-poppins-umbrella"] .mount-block::after {
+            content: '';
+            position: absolute;
+            left: calc(50% - 3px);
+            top: 78%;
+            width: 6px;
+            height: 92%;
+            border-radius: 999px;
+            background: #5b3140;
+        }
+
+        #mount-world-visual[data-mount="mary-poppins-umbrella"] .mount-label,
+        #mount-world-visual[data-mount="helicopter-hat"] .mount-label {
+            display: none;
+        }
+
+        #mount-world-visual[data-mount="hamster-ball"] .mount-block {
+            overflow: hidden;
+            border: 5px solid rgba(218, 250, 255, 0.9);
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 31% 24%, rgba(255, 255, 255, 0.62) 0 5%, transparent 6%),
+                radial-gradient(circle at 50% 50%, rgba(112, 225, 255, 0.07) 0 57%, rgba(80, 196, 229, 0.19) 82%, rgba(255, 255, 255, 0.32) 100%);
+            box-shadow:
+                inset 12px 10px 18px rgba(255, 255, 255, 0.3),
+                inset -13px -15px 22px rgba(25, 133, 170, 0.22);
+        }
+
+        #mount-world-visual[data-mount="hamster-ball"] .mount-block::before,
+        #mount-world-visual[data-mount="hamster-ball"] .mount-block::after {
+            content: '';
+            position: absolute;
+            pointer-events: none;
+            inset: 0;
+            border: 0;
+            border-radius: 50%;
+        }
+
+        #mount-world-visual[data-mount="hamster-ball"] .mount-block::before {
+            background:
+                radial-gradient(ellipse 15% 49% at 50% 50%, transparent 97.6%, rgba(224, 251, 255, 0.44) 98.1% 98.8%, transparent 99.3%),
+                radial-gradient(ellipse 29% 49.5% at 50% 50%, transparent 97.8%, rgba(224, 251, 255, 0.42) 98.2% 98.9%, transparent 99.4%),
+                radial-gradient(ellipse 43% 50% at 50% 50%, transparent 97.9%, rgba(224, 251, 255, 0.4) 98.3% 99%, transparent 99.5%);
+        }
+
+        #mount-world-visual[data-mount="hamster-ball"] .mount-block::after {
+            background:
+                radial-gradient(ellipse 49% 15% at 50% 50%, transparent 97.6%, rgba(224, 251, 255, 0.44) 98.1% 98.8%, transparent 99.3%),
+                radial-gradient(ellipse 49.5% 29% at 50% 50%, transparent 97.8%, rgba(224, 251, 255, 0.42) 98.2% 98.9%, transparent 99.4%),
+                radial-gradient(ellipse 50% 43% at 50% 50%, transparent 97.9%, rgba(224, 251, 255, 0.4) 98.3% 99%, transparent 99.5%);
+        }
+
+        #mount-world-visual[data-mount="hamster-ball"] .mount-label {
+            display: none;
+        }
+
+        #mount-world-visual[data-mount="pogo-stick"] .mount-block {
+            overflow: visible;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        #mount-world-visual[data-mount="pogo-stick"] .mount-block::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 8%;
+            bottom: 8%;
+            width: 22%;
+            transform: translateX(-50%);
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            border-radius: 999px;
+            background: linear-gradient(90deg, #5abf3a, #bcff69 48%, #4a9b33);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.38), inset 0 -18px 0 rgba(0, 0, 0, 0.12);
+        }
+
+        #mount-world-visual[data-mount="pogo-stick"] .mount-block::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: 0;
+            width: 72%;
+            height: 15%;
+            transform: translateX(-50%);
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            border-radius: 999px;
+            background: #2d7331;
+            box-shadow: 0 5px 8px rgba(0, 0, 0, 0.35);
+        }
+
+        #mount-world-visual[data-mount="pogo-stick"] .mount-label {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            display: block;
+            width: 100%;
+            height: 13%;
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            border-radius: 999px;
+            background: #83df45;
+            box-shadow: 0 4px 7px rgba(0, 0, 0, 0.34);
+            font-size: 0;
+        }
+
+        #mount-world-visual[data-mount="cannon"] .mount-block {
+            display: none;
+            overflow: visible;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        #mount-world-visual[data-mount="cannon"] .mount-block::before {
+            content: '';
+            position: absolute;
+            left: 23%;
+            top: 7%;
+            bottom: 17%;
+            width: 54%;
+            box-sizing: border-box;
+            border: 5px solid rgba(255, 255, 255, 0.86);
+            border-radius: 42% 42% 15px 15px;
+            background: linear-gradient(90deg, #3b4655, #8998aa 45%, #465262 78%, #252d38);
+            box-shadow: 0 9px 13px rgba(0, 0, 0, 0.48), inset 10px 0 12px rgba(255, 255, 255, 0.16),
+                inset -12px -10px 15px rgba(0, 0, 0, 0.32);
+        }
+
+        #mount-world-visual[data-mount="cannon"] .mount-block::after {
+            content: '';
+            position: absolute;
+            left: 12%;
+            bottom: -2%;
+            width: 76%;
+            height: 34%;
+            box-sizing: border-box;
+            border: 5px solid rgba(255, 255, 255, 0.84);
+            border-radius: 50%;
+            background: radial-gradient(circle, #95a4b5 0 19%, #303a47 22% 55%, #778697 58% 72%, #222a34 75%);
+            box-shadow: 0 9px 13px rgba(0, 0, 0, 0.48);
+        }
+
+        #mount-world-visual[data-mount="cannon"] .mount-label {
+            position: absolute;
+            left: 17%;
+            right: 17%;
+            top: -2%;
+            height: 26%;
+            display: block;
+            box-sizing: border-box;
+            border: 6px solid #d6e0ea;
+            border-radius: 50%;
+            background: radial-gradient(ellipse, #151b22 0 53%, #657386 57% 70%, #222b36 73%);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.48), inset 0 2px 3px rgba(255, 255, 255, 0.32);
+            font-size: 0;
+        }
+
+        #mount-world-visual[data-mount="cannon"].is-firing .mount-label {
+            filter: brightness(1.8);
+            box-shadow: 0 -22px 24px 8px rgba(255, 210, 78, 0.9), 0 4px 8px rgba(0, 0, 0, 0.48);
+        }
+
+        #mount-world-visual[data-mount="cannon"]::after {
+            content: 'POWER';
+            position: absolute;
+            left: 50%;
+            top: calc(100% + 10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 190px;
+            height: 22px;
+            box-sizing: border-box;
+            transform: translateX(-50%);
+            border: 2px solid rgba(255, 255, 255, 0.82);
+            border-radius: 7px;
+            background: linear-gradient(90deg,
+                #65e873 0 calc(var(--cannon-power, 0) * 100%),
+                rgba(26, 32, 41, 0.9) calc(var(--cannon-power, 0) * 100%) 100%);
+            color: #fff;
+            box-shadow: 0 4px 9px rgba(0, 0, 0, 0.38);
+            font: 900 9px/1 'Trebuchet MS', sans-serif;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+            z-index: 60;
+        }
+
+        #mount-world-visual[data-mount="cannon"].is-charging::after {
+            border-color: #fff6a5;
+            box-shadow: 0 0 14px rgba(255, 224, 79, 0.9), 0 4px 9px rgba(0, 0, 0, 0.38);
+        }
+
+        #mount-world-visual[data-mount="cannon"].is-summoning::after,
+        #mount-world-visual[data-mount="cannon"].is-firing::after {
+            display: none;
+        }
+
+        #mount-world-visual[data-mount="teleport"] .mount-block {
+            overflow: visible;
+            border: 5px solid rgba(223, 253, 255, 0.95);
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 42% 38%, #ffffff 0 5%, #9dffff 8%, rgba(0, 229, 255, 0.86) 21%,
+                    rgba(41, 77, 255, 0.68) 46%, rgba(79, 22, 178, 0.32) 65%, transparent 72%),
+                radial-gradient(circle, rgba(0, 229, 255, 0.9), rgba(79, 22, 178, 0.34) 61%, transparent 72%);
+            box-shadow:
+                0 0 15px 6px rgba(218, 255, 255, 0.95),
+                0 0 42px 16px rgba(0, 229, 255, 0.82),
+                0 0 76px 28px rgba(98, 48, 255, 0.48),
+                inset 0 0 28px rgba(255, 255, 255, 0.9);
+            will-change: transform, opacity;
+            animation: teleport-pulse 180ms ease-in-out infinite alternate;
+        }
+
+        #mount-world-visual[data-mount="teleport"] .mount-block::before,
+        #mount-world-visual[data-mount="teleport"] .mount-block::after {
+            content: '';
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+        }
+
+        #mount-world-visual[data-mount="teleport"] .mount-block::before {
+            inset: -19%;
+            border: 7px dashed rgba(187, 252, 255, 0.92);
+            box-shadow: 0 0 8px #00e5ff, inset 0 0 8px #00e5ff;
+            will-change: transform;
+            animation: teleport-spin 420ms linear infinite;
+        }
+
+        #mount-world-visual[data-mount="teleport"] .mount-block::after {
+            inset: 10%;
+            border: 5px dotted rgba(255, 255, 255, 0.96);
+            box-shadow: 0 0 7px #7c4dff, inset 0 0 7px #7c4dff;
+            will-change: transform;
+            animation: teleport-spin 260ms linear infinite reverse;
+        }
+
+        #mount-world-visual[data-mount="teleport"] .mount-label {
+            display: none;
+            z-index: 4;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font: 900 clamp(13px, 4.5vw, 22px)/1 'Trebuchet MS', sans-serif;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 1px;
+            text-shadow:
+                0 2px 3px rgba(7, 10, 45, 0.95),
+                0 0 8px rgba(0, 229, 255, 1),
+                0 0 15px rgba(124, 77, 255, 0.9);
+        }
+
+        #mount-world-visual[data-mount="teleport"].is-summoning .mount-block {
+            animation: mount-arrive 360ms cubic-bezier(.2, 1.55, .5, 1) both;
+        }
+
+        #mount-world-visual[data-mount="teleport"].is-teleport-pop .mount-block {
+            animation: teleport-pop 180ms ease-out both;
+        }
+
+        @keyframes teleport-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes teleport-pulse {
+            from { transform: scale(0.92); opacity: 0.85; }
+            to { transform: scale(1.08); opacity: 1; }
+        }
+
+        @keyframes teleport-pop {
+            from { transform: scale(0.9); opacity: 1; }
+            to { transform: scale(1.85); opacity: 0; }
+        }
+
+        #toggle-leaves-btn {
+            margin-top: 6px;
+            min-height: 32px;
+            padding: 3px 8px;
+            border: 1px solid #577360;
+            background: #20352a;
+            color: #9dffad;
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        #toggle-leaves-btn[aria-pressed="false"] {
+            border-color: #555;
+            background: #222;
+            filter: grayscale(1);
+            opacity: 0.62;
+        }
+
+        @keyframes mount-button-pulse {
+            to { transform: translateY(-2px) scale(1.06); }
+        }
+
+        @keyframes mount-arrive {
+            from { opacity: 0; transform: translateY(45%) scale(0.25); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes hover-car-arrive {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes mount-rotor {
+            50% { transform: scaleX(0.28); }
+        }
+
+        @keyframes helicopter-propeller-spin {
+            0%, 100% { transform: translate(-50%, -50%) scaleX(1); }
+            25% { transform: translate(-50%, -50%) scaleX(0.08); }
+            50% { transform: translate(-50%, -50%) scaleX(-1); }
+            75% { transform: translate(-50%, -50%) scaleX(-0.08); }
+        }
+
+        @keyframes hover-board-glow-pulse {
+            from { opacity: 0.48; }
+            to { opacity: 1; }
+        }
+
+        @keyframes hover-car-glow-pulse {
+            from {
+                opacity: 0.38;
+                transform: scaleX(0.82) scaleY(0.62);
+            }
+            to {
+                opacity: 1;
+                transform: scaleX(1.12) scaleY(2.45);
+            }
+        }
+
+        @media (max-width: 760px) {
+            #mount-mode-ui {
+                left: 8px;
+                right: 8px;
+                width: auto;
+                transform: none;
+            }
+
+            #mount-mode-buttons {
+                justify-content: flex-start;
+                padding-right: 70px;
+            }
+
+            .mount-mode-btn {
+                width: 56px;
+                height: 56px;
+                padding: 5px;
+                font-size: 8px;
+            }
+
+            #mount-return-btn {
+                width: 92px;
+                height: 92px;
+                margin-top: 1px;
+                padding: 12px;
+                font-size: 12px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="mobile.css">
+</head>
+
+<body>
+    <nav id="mount-mode-ui" aria-label="Mount modes">
+        <div id="mount-mode-buttons" role="toolbar" aria-label="Choose a mount">
+            <button class="mount-mode-btn" type="button" data-mount="skateboard" title="Skate fast along the ground and jump"
+                style="--mount-color:#f05d5e">Skateboard</button>
+            <button class="mount-mode-btn" type="button" data-mount="skiis" title="Low-friction skis; small jumps add momentum"
+                style="--mount-color:#38bdf8">Skiis</button>
+            <button class="mount-mode-btn" type="button" data-mount="pogo-stick" title="Auto-bounce on landing; hold Jump for a stronger bounce"
+                style="--mount-color:#72c84a">Pogo Stick</button>
+            <button class="mount-mode-btn" type="button" data-mount="cannon" title="Aim with A/D or Left/Right; hold the game area to charge, then release to fire"
+                style="--mount-color:#465262">Cannon</button>
+            <button class="mount-mode-btn" type="button" data-mount="teleport" title="Become electricity and fly through the map at extreme speed for 3 seconds"
+                style="--mount-color:#00bcd4">Teleport</button>
+            <button class="mount-mode-btn" type="button" data-mount="flying-hover-car" title="Drive fast; hold jump to fire the hover jets"
+                style="--mount-color:#38bdf8">Flying Hover Car</button>
+            <button class="mount-mode-btn" type="button" data-mount="hoverboard" title="A soft, bobbing board that floats over edges"
+                style="--mount-color:#b66cff">Hover Board</button>
+            <button class="mount-mode-btn" type="button" data-mount="helicopter-hat" title="Hold jump to rise; use S or Down to descend"
+                style="--mount-color:#ffd43b">Helicopter Hat</button>
+            <button class="mount-mode-btn" type="button" data-mount="lakitu-cloud" title="Float freely; use jump to rise and S or Down to descend"
+                style="--mount-color:#f8f9fa;color:#263238;text-shadow:none">Cloud</button>
+            <button class="mount-mode-btn" type="button" data-mount="mary-poppins-umbrella" title="Jump extra high and float gently down"
+                style="--mount-color:#ef5da8">Mary Poppins Umbrella</button>
+            <button class="mount-mode-btn" type="button" data-mount="sports-car" title="Accelerate to very high ground speed with playful drift"
+                style="--mount-color:#ff7b00">SportsCar</button>
+            <button class="mount-mode-btn" type="button" data-mount="jetpack" title="The original fuel-powered Jetpack mode"
+                style="--mount-color:#64748b">Jetpack</button>
+            <button class="mount-mode-btn" type="button" data-mount="hamster-ball" title="Build momentum and roll inside a giant hamster ball"
+                style="--mount-color:#55c7e8">Hamster Ball</button>
+        </div>
+        <button id="mount-return-btn" type="button" hidden>Return Default Mode</button>
+    </nav>
+
+    <div id="ui-controls">
+        <div id="ui-top-row">
+            <button id="toggle-debug-btn" type="button">Debug</button>
+            <button id="toggle-ui-btn" type="button">Hide UI</button>
+        </div>
+        <button id="randomize-colors-btn" type="button" style="margin-top: 6px;">Rnd Colors</button>
+        <button id="randomize-skins-btn" type="button" style="margin-top: 6px;">Rnd Skins</button>
+        <button id="camera-tracking-btn" type="button" aria-pressed="true">Camera Follow: ON</button>
+        <br>
+        <button id="build-mode-btn" type="button">Enter Build Mode</button>
+        <button id="chair-tool-btn" type="button" disabled>Chair Tool (Off)</button>
+        <button id="door-tool-btn" type="button" disabled>Door Tool (Off)</button>
+        <button id="add-text-btn" type="button" disabled>Add Text</button>
+        <div id="build-layer-panel" aria-label="Selected item draw order" hidden>
+            <div id="build-layer-controls" role="group" aria-label="Selected item draw order">
+                <button id="build-layer-back-btn" type="button">Send Back</button>
+                <button id="build-layer-forward-btn" type="button">Bring Forward</button>
+            </div>
+            <label id="bush-skin-control" hidden>
+                Bush skin
+                <select id="bush-skin-select" aria-label="Selected bush skin"></select>
+            </label>
+            <p id="build-layer-status" role="status" aria-live="polite">No layerable item selected.</p>
+        </div>
+        <button id="door-clear-btn" type="button">Clear Doors</button>
+        <button id="npc-toggle-btn" type="button">Load NPC</button>
+        <button id="clear-platforms-btn" type="button">Clear Platforms</button>
+        <button id="copy-platforms-btn" type="button">Copy Platforms</button>
+        <label id="hair-color-toggle">
+            <input type="checkbox" id="toggle-hair-color" checked>
+            Hair color
+        </label>
+        <div id="animation-controls">
+            <label>
+                Set
+                <select id="animation-set-select" aria-label="Animation set"></select>
+            </label>
+            <label>
+                Run
+                <select id="run-animation-select" aria-label="Run animation variant"></select>
+            </label>
+            <label>
+                Walk
+                <select id="walk-animation-select" aria-label="Walk animation variant"></select>
+            </label>
+        </div>
+        <button id="random-animation-test-btn" type="button" style="margin-top: 6px;">Rnd Anim Test: OFF</button>
+        <select id="background-select" aria-label="Background image"></select>
+        <button id="toggle-background-btn" type="button" style="margin-top: 6px;">Hide BG</button>
+        <button id="toggle-leaves-btn" type="button" aria-label="Turn ambient leaves off"
+            aria-pressed="true" title="Toggle ambient leaves">🍃</button>
+        <details id="character-skin-menu">
+            <summary>Character skins</summary>
+            <div id="skin-controls" aria-label="Skin selection controls"></div>
+        </details>
+        <p style="font-size: 12px;">Ctrl: WASD, Arrows (SHFT=Run) = Move</p>
+        <p style="font-size: 12px;">W/Up Arrow/Space = Jump</p>
+        <p style="font-size: 12px;">Middle Click n Drag = PAN</p>
+        <p style="font-size: 12px;">Scroll = ZOOM, L = lie down</p>
+        <p style="font-size: 12px;">P = Unsheath Sword, R = Attack</p>
+        <p style="font-size: 12px;">"T" to Chat, Hold "E" = Emotes</p>
+
+
+        <div id="mouse-tracker" aria-live="polite">X: 0 Y: 0</div>
+    </div>
+
+    <button id="camera-recenter-btn" type="button" aria-label="Recenter camera on player"
+        title="Recenter camera on player">CENTER</button>
+
+    <div id="build-add-tools" hidden>
+        <div id="build-add-menu" role="menu" aria-label="Add an animated build item" hidden>
+            <div class="build-add-heading" role="presentation">Platforms</div>
+            <button type="button" role="menuitem" data-build-action="draw-platform">Draw Platform</button>
+            <div class="build-add-heading" role="presentation">Existing scene items</div>
+            <button type="button" role="menuitem" data-build-item="balloon">Place Balloon Here</button>
+            <div class="build-add-heading" role="presentation">Ambient Life</div>
+            <button type="button" role="menuitem" data-build-item="butterfly-spawn">Butterfly Spawn Point</button>
+            <div class="build-add-heading" role="presentation">Fan Blades</div>
+            <button type="button" role="menuitem" data-build-item="fan-round-spline">Round Fan · Spline</button>
+            <button type="button" role="menuitem" data-build-item="fan-round-stepped">Round Fan · Stepped</button>
+            <button type="button" role="menuitem" data-build-item="fan-square-spline">Square Fan · Spline</button>
+            <button type="button" role="menuitem" data-build-item="fan-square-stepped">Square Fan · Stepped</button>
+            <div class="build-add-heading" role="presentation">Bushes</div>
+            <button type="button" role="menuitem" data-build-item="bush-spline">Bush · Spline</button>
+            <button type="button" role="menuitem" data-build-item="bush-stepped">Bush · Stepped</button>
+            <div class="build-add-heading" role="presentation">Selected removable item</div>
+            <button id="build-remove-selected-btn" type="button" role="menuitem"
+                data-build-action="remove-selected">Remove Selected Item</button>
+            <p id="build-add-note" role="status" aria-live="polite">Choose Draw Platform before dragging new platform geometry. Drag an item or butterfly spawn point to select it. Items cannot move behind the background.</p>
+        </div>
+        <button id="build-add-btn" type="button" aria-label="Add a build item" aria-haspopup="menu"
+            aria-controls="build-add-menu" aria-expanded="false">+</button>
+    </div>
+
+    <div id="build-placement-status" role="status" aria-live="assertive" hidden>Tap the world to place object</div>
+
+    <div id="game-wrapper">
+        <div id="game-board">
+            <canvas id="game-canvas" tabindex="-1"></canvas>
+            <div id="player-container">
+                <div id="jetpack-bar">
+                    <div id="jetpack-bar-fill"></div>
+                </div>
+                <div id="sit-prompt" aria-live="polite">Press F to sit</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="debug-info">Loading...</div>
+    <div id="coin-counter" aria-live="polite">COINS: 0</div>
+
+    <div id="joystick" aria-hidden="true">
+        <div class="joystick-base"></div>
+        <div class="joystick-thumb" id="joystick-thumb"></div>
+    </div>
+
+    <script src="vendor/spine-player/spine-player.js"></script>
+    <script src="speechBubble.js"></script>
+    <script src="emoteMenu.js"></script>
+    <script src="platforms.js"></script>
+    <script src="VFX.js"></script>
+    <script src="ChatBot.js"></script>
+    <script>
+        (() => {
+            'use strict';
+
+            const GRAVITY = 5900;
+            const MODE_CONFIG = Object.freeze({
+                skateboard: {
+                    label: 'SKATE', color: '#f05d5e', glow: 'rgba(240,93,94,.7)',
+                    speed: 1250, accel: 0, decel: 85, jump: -800,
+                    width: 152, height: 23.5, bob: 0, placement: 'below', layer: 49,
+                    layeredArt: 'skateboard', underlayLayer: 49,
+                    riderOnlyLift: 10,
+                    airControl: 0.12, suppressJumpAnimations: true,
+                    skateboardPropulsion: true, skateboardPushImpulse: 300,
+                    skateboardReversePushImpulse: 400, skateboardReversePushCount: 4,
+                    skateboardPushThreshold: 940, skateboardStopSpeed: 8,
+                    skateboardAirDrag: 20,
+                    skateboardIdleMoveAnimation: 'GameAnims/Mounts/skateboard_idleMove',
+                    skateboardIdleStandAnimation: 'GameAnims/Mounts/skateboard_idleStand',
+                    skateboardJumpAnimation: 'GameAnims/Mounts/skateboard_jump',
+                    skateboardJumpStandAnimation: 'GameAnims/Mounts/skateboard_jumpStand',
+                    skateboardJumpRotationBone: 'skateboard_bone',
+                    skateboardOllieChargeAnimation: 'GameAnims/Mounts/skateboard_downOllie',
+                    skateboardOllieLaunchAnimation: 'GameAnims/Mounts/skateboard_upOllie',
+                    skateboardOllieHeightMultiplier: 8,
+                    skateboardPushAnimation: 'GameAnims/Mounts/skateboard_push',
+                    skateboardPushEvent: 'skateboard_push'
+                },
+                skiis: {
+                    label: '', color: '#38bdf8', glow: 'rgba(56,189,248,.65)',
+                    speed: 1750, accel: 480, decel: 18, jump: -500,
+                    width: 220, height: 34, bob: 0, placement: 'below', layer: 49,
+                    riderOnlyLift: 8, airControl: 0.2,
+                    loopAnimation: 'GameAnims/skiiLoop', suppressJumpAnimations: true,
+                    jumpMomentumBoost: 180,
+                    airGravity: 4300, risingGravity: 4200, maxFall: 920
+                },
+                'pogo-stick': {
+                    label: '', color: '#72c84a', glow: 'rgba(114,200,74,.78)',
+                    speed: 820, accel: 1500, decel: 480,
+                    jump: -720, boostedJump: -1520, bounceDelay: 0.24,
+                    width: 84.49, height: 193.375, bob: 0, placement: 'below', layer: 51,
+                    layeredArt: 'pogo-stick', underlayLayer: 51, overlayLayer: 52,
+                    airControl: 0.55, animation: 'idle', autoBounce: true,
+                    riderOnlyLift: 82.6, pogoVisual: true, rotateRiderWithPogo: true,
+                    plantFootOnGround: true, pogoLaunchSpeed: 520,
+                    pogoGroundLean: 14, pogoAirLean: 18,
+                    pogoLeanStiffness: 48, pogoLeanDamping: 7.2, pogoLeanLimit: 24,
+                    risingGravity: 3900, airGravity: 4700, maxFall: 1450,
+                    springImpactScale: 0.16, springMaxBonus: 280,
+                    idleSpringImpactScale: 0.05, idleSpringMaxBonus: 90,
+                    pogoCompressionAmount: 0.32,
+                    pogoCompressionRate: 8, pogoReleaseRate: 2.72
+                },
+                cannon: {
+                    label: '', color: '#465262', glow: 'rgba(210,224,238,.7)',
+                    speed: 0, accel: 0, decel: 0, jump: 0,
+                    width: 279.3, height: 360, bob: 0, placement: 'below', layer: 57,
+                    layeredArt: 'cannon', artLayerZ: [52, 56, 57],
+                    animation: 'idle', cannon: true, aimSpeed: 76, maxAimAngle: 66,
+                    launchPowerMin: 4300, launchPowerMax: 8400, chargeTime: 1.4,
+                    cannonRiderLift: 105,
+                    cannonRiderPivotX: 0.4965, cannonRiderPivotY: 0.7231,
+                    aimZoom: 0.24,
+                    zoomOutDuration: 0.55, zoomRestoreDuration: 1.05
+                },
+                teleport: {
+                    label: '', color: '#00e5ff', glow: 'rgba(0,229,255,.95)',
+                    speed: 7500, accel: 24000, decel: 18000, jump: -1800,
+                    width: 280, height: 280, bob: 0, placement: 'below', layer: 58,
+                    airControl: 1, animation: 'idle', teleport: true, ignoresPlatforms: true,
+                    flight: 'electric', ascent: -6500, descent: 6500, verticalAccel: 24000,
+                    duration: 3, activationLift: -600, popDuration: 0.18,
+                    zoomMultiplier: 0.42, zoomOutDuration: 0.72, zoomRestoreDuration: 0.82
+                },
+                'flying-hover-car': {
+                    label: '', color: '#38bdf8', glow: 'rgba(56,189,248,.75)',
+                    speed: 1656, accel: 2940, decel: 720, jump: -1350,
+                    width: 440, height: 393, bob: 14, placement: 'below', layer: 49,
+                    layeredHoverCar: true, underlayLayer: 49, overlayLayer: 51,
+                    zoomMultiplier: 0.42, zoomOutDuration: 0.72, zoomRestoreDuration: 0.82,
+                    riderLift: 68, riderOnlyLift: 62, riderOffsetX: -32,
+                    riderBob: true, animation: 'idle', ignoresPlatforms: true,
+                    flight: 'hover-car', ascent: -1260, descent: 624, verticalAccel: 1620,
+                    hoverRate: 0.65, hoverVelocity: 18, bobRate: 1.6, sustainedFlight: true
+                },
+                hoverboard: {
+                    label: '', color: '#b66cff', glow: 'rgba(182,108,255,.8)',
+                    speed: 1000, accel: 2800, decel: 850, jump: -620,
+                    width: 259.2, height: 85.2, bob: 12, placement: 'below', layer: 49,
+                    layeredArt: 'hoverboard', underlayLayer: 49, overlayLayer: 51,
+                    bottomGlow: true, bottomGlowWidth: 0.76, bottomGlowHeight: 0.68,
+                    riderLift: 42, riderOnlyLift: 20,
+                    riderBob: true, animation: 'idle', inertia: true,
+                    airGravity: 800, risingGravity: 1800, maxFall: 360, airControl: 0.48
+                },
+                'helicopter-hat': {
+                    label: '', color: '#ffd43b', glow: 'rgba(255,212,59,.72)',
+                    speed: 945, accel: 2900, decel: 1800, jump: -1100,
+                    width: 245, height: 132.3, bob: 12, placement: 'above', layer: 55,
+                    layeredArt: 'helicopter-hat', artLayerZ: [55, 56],
+                    riderLift: 15, riderOnlyLift: 45, riderBob: true, anchorOffset: 50,
+                    animation: 'idle', hatPendulum: true, hatMaxTilt: 18, ignoresPlatforms: true,
+                    flight: 'hover', ascent: -900, descent: 720, verticalAccel: 3200
+                },
+                'lakitu-cloud': {
+                    label: '', color: '#f8f9fa', glow: 'rgba(255,255,255,.9)',
+                    speed: 795, accel: 2200, decel: 920, jump: -900,
+                    width: 260, height: 130, bob: 15, placement: 'below', layer: 54,
+                    layeredArt: 'cloud', underlayLayer: 54,
+                    riderLift: 22, riderBob: true, ignoresPlatforms: true, autonomousDrift: true,
+                    animation: 'idle', rotateRiderWithMount: true,
+                    flight: 'cloud', ascent: -660, descent: 610, verticalAccel: 2100
+                },
+                'mary-poppins-umbrella': {
+                    label: '', color: '#ef5da8', glow: 'rgba(239,93,168,.72)',
+                    speed: 795, accel: 2200, decel: 920, jump: -900,
+                    width: 230, height: 98, bob: 15, placement: 'above-high', layer: 55,
+                    anchorOffset: 20, riderBob: true,
+                    ignoresPlatforms: true, autonomousDrift: true, animation: 'idle',
+                    flight: 'cloud', ascent: -660, descent: 610, verticalAccel: 2100
+                },
+                'sports-car': {
+                    label: 'SPORT', color: '#ff7b00', glow: 'rgba(255,123,0,.7)',
+                    speed: 2320, accel: 5200, decel: 430, brakeAccel: 26000, reverseAccel: 9000,
+                    jump: -1260, width: 330, height: 112, bob: 0, placement: 'below',
+                    layer: 52, airControl: 0.06, animation: 'race-car', hideVisual: true,
+                    invertFacing: true
+                },
+                'hamster-ball': {
+                    label: '', color: '#55c7e8', glow: 'rgba(85,199,232,.72)',
+                    speed: 1080, accel: 1150, decel: 210, brakeAccel: 6800, reverseAccel: 3200,
+                    jump: -1050, width: 420, height: 420, bob: 0, placement: 'below',
+                    layer: 53, airControl: 0.28, animation: 'frozen-pose', riderOnlyLift: 55,
+                    rollVisual: true, rotateRiderWithBall: true, impactBounce: true,
+                    impactBounceBase: 0, impactBounceScale: 0.76, impactBounceMax: 2600,
+                    impactBounceMinImpact: 240, impactBounceMinSpeed: 180,
+                    impactBouncePump: 600, impactBounceBuffer: 0.24
+                },
+                jetpack: {
+                    label: '', color: '#64748b', glow: 'rgba(148,163,184,.7)',
+                    speed: 2400, accel: 360, decel: 120, jump: -1500,
+                    width: 0, height: 0, bob: 0, placement: 'below', layer: 45,
+                    nativeJetpack: true, hideVisual: true
+                }
+            });
+
+            const moveToward = (value, target, maxDelta) => {
+                if (value < target) return Math.min(value + maxDelta, target);
+                if (value > target) return Math.max(value - maxDelta, target);
+                return target;
+            };
+
+            window.AnimeeMountModes = Object.freeze({
+                create(api) {
+                    const buttons = Array.from(document.querySelectorAll('.mount-mode-btn[data-mount]'));
+                    const returnButton = document.getElementById('mount-return-btn');
+                    const leafButton = document.getElementById('toggle-leaves-btn');
+                    const board = document.getElementById('game-board');
+                    const canvas = document.getElementById('game-canvas');
+                    const playerElement = document.getElementById('player-container');
+                    if (!api?.player || !buttons.length || !returnButton || !board) return null;
+
+                    const visual = document.createElement('div');
+                    visual.id = 'mount-world-visual';
+                    visual.setAttribute('aria-hidden', 'true');
+                    visual.innerHTML = '<div class="mount-block"><span class="mount-label"></span></div>';
+                    board.appendChild(visual);
+                    const hoverCarUnderlay = document.createElement('img');
+                    hoverCarUnderlay.className = 'hover-car-layer hover-car-underlay';
+                    hoverCarUnderlay.src = 'img_assets/mounts/hover-car/Underlay.png';
+                    hoverCarUnderlay.alt = '';
+                    hoverCarUnderlay.draggable = false;
+                    hoverCarUnderlay.setAttribute('aria-hidden', 'true');
+                    const hoverCarOverlay = document.createElement('img');
+                    hoverCarOverlay.className = 'hover-car-layer hover-car-overlay';
+                    hoverCarOverlay.src = 'img_assets/mounts/hover-car/OVERLAY.png';
+                    hoverCarOverlay.alt = '';
+                    hoverCarOverlay.draggable = false;
+                    hoverCarOverlay.setAttribute('aria-hidden', 'true');
+                    const hoverCarGlow = document.createElement('div');
+                    hoverCarGlow.className = 'hover-car-glow';
+                    hoverCarGlow.setAttribute('aria-hidden', 'true');
+                    const hoverBoardGlow = document.createElement('div');
+                    hoverBoardGlow.className = 'hover-board-glow';
+                    hoverBoardGlow.setAttribute('aria-hidden', 'true');
+                    board.append(hoverCarGlow, hoverBoardGlow, hoverCarUnderlay, hoverCarOverlay);
+                    const hoverCarLayers = [hoverCarUnderlay, hoverCarOverlay];
+                    const createMountArtLayer = (className, imagePath, layout) => {
+                        const layer = document.createElement('div');
+                        layer.className = `mount-art-layer ${className}`;
+                        layer.setAttribute('aria-hidden', 'true');
+                        const image = document.createElement('img');
+                        image.src = imagePath;
+                        image.alt = '';
+                        image.draggable = false;
+                        image.style.width = `${layout.widthPercent}%`;
+                        image.style.height = `${layout.heightPercent}%`;
+                        if (Number.isFinite(layout.centerYPercent)) {
+                            image.style.left = `${layout.centerXPercent ?? 50}%`;
+                            image.style.top = `${layout.centerYPercent}%`;
+                            image.style.transform = 'translate(-50%, -50%)';
+                        } else {
+                            image.style.left = `${layout.centerXPercent ?? 50}%`;
+                            image.style.bottom = `${layout.bottomPercent ?? 0}%`;
+                            image.style.transform = 'translateX(-50%)';
+                        }
+                        layer.appendChild(image);
+                        board.appendChild(layer);
+                        return layer;
+                    };
+                    const skateboardLayers = [
+                        createMountArtLayer('skateboard-art', 'img_assets/mounts/skateboard/Skateboard.png', {
+                            widthPercent: 100, heightPercent: 100, bottomPercent: 0
+                        })
+                    ];
+                    const hoverBoardLayers = [
+                        createMountArtLayer('hover-board-underlay', 'img_assets/mounts/hover-board/Underlay.png', {
+                            widthPercent: 100, heightPercent: 100, bottomPercent: 0
+                        }),
+                        createMountArtLayer('hover-board-overlay', 'img_assets/mounts/hover-board/OVERLAY.png', {
+                            widthPercent: 100, heightPercent: (99 / 142) * 100, bottomPercent: 0
+                        })
+                    ];
+                    const pogoStickLayers = [
+                        createMountArtLayer('pogo-stick-leg', 'img_assets/mounts/pogo-stick/PogoStick_Leg.png', {
+                            widthPercent: (38 / 142) * 100, heightPercent: (228 / 325) * 100, bottomPercent: 0
+                        }),
+                        createMountArtLayer('pogo-stick-body', 'img_assets/mounts/pogo-stick/PogoStick_Body.png', {
+                            widthPercent: 100, heightPercent: (196 / 325) * 100, bottomPercent: (129 / 325) * 100
+                        })
+                    ];
+                    const cannonLayers = [
+                        createMountArtLayer('cannon-wheel-far', 'img_assets/mounts/cannon/WHEELFAR.png', {
+                            centerXPercent: 32.60, centerYPercent: 71.31,
+                            widthPercent: 65.21, heightPercent: 52.55
+                        }),
+                        createMountArtLayer('cannon-barrel', 'img_assets/mounts/cannon/BARREL.png', {
+                            centerXPercent: 49.65, centerYPercent: 46.56,
+                            widthPercent: 74.65, heightPercent: 93.12
+                        }),
+                        createMountArtLayer('cannon-wheel-near', 'img_assets/mounts/cannon/WHEELNEAR.png', {
+                            centerXPercent: 66.53, centerYPercent: 73.10,
+                            widthPercent: 66.94, heightPercent: 53.80
+                        })
+                    ];
+                    cannonLayers[1].firstElementChild.style.transformOrigin = '50% 77.64%';
+                    const helicopterHatLayers = [
+                        createMountArtLayer('helicopter-hat-body', 'img_assets/mounts/helicopter-hat/HAT.png', {
+                            centerXPercent: 50.06, centerYPercent: 51.39,
+                            widthPercent: 88.65, heightPercent: 97.23
+                        }),
+                        createMountArtLayer('helicopter-propeller', 'img_assets/mounts/helicopter-hat/Propeller.png', {
+                            centerXPercent: 50, centerYPercent: 12.93,
+                            widthPercent: 100, heightPercent: 25.87
+                        })
+                    ];
+                    helicopterHatLayers[0].firstElementChild.style.transformOrigin = '48.95% 6.41%';
+                    const cloudLayers = [
+                        createMountArtLayer('cloud-art', 'img_assets/mounts/cloud/Cloud.png', {
+                            widthPercent: 100, heightPercent: 100, bottomPercent: 0
+                        })
+                    ];
+                    const mountArtLayerSets = Object.freeze({
+                        skateboard: skateboardLayers,
+                        hoverboard: hoverBoardLayers,
+                        'pogo-stick': pogoStickLayers,
+                        cannon: cannonLayers,
+                        'helicopter-hat': helicopterHatLayers,
+                        cloud: cloudLayers
+                    });
+                    const allMountArtLayers = [
+                        ...skateboardLayers,
+                        ...hoverBoardLayers,
+                        ...pogoStickLayers,
+                        ...cannonLayers,
+                        ...helicopterHatLayers,
+                        ...cloudLayers
+                    ];
+                    const mountBlock = visual.querySelector('.mount-block');
+                    const label = visual.querySelector('.mount-label');
+                    const state = {
+                        mode: null,
+                        phase: 'default',
+                        phaseTime: 0,
+                        elapsed: 0,
+                        horizontalVelocity: 0,
+                        commandedVelocity: 0,
+                        wasGrounded: false,
+                        jumpWasPressed: false,
+                        lastInputDirection: 0,
+                        pendingReverseDirection: 0,
+                        inertiaPlaying: false,
+                        pendingInertia: null,
+                        inertiaTimer: 0,
+                        animationToken: 0,
+                        skateboardPushActive: false,
+                        skateboardPushDirection: 0,
+                        skateboardJumpActive: false,
+                        skateboardOllieCharging: false,
+                        skateboardOllieActive: false,
+                        skateboardReversePushesRemaining: 0,
+                        skateboardReverseDirection: 0,
+                        hoverCoastTime: 0,
+                        flightOriginY: 0,
+                        ballRotation: 0,
+                        impactBouncePumpTimer: 0,
+                        pogoCompression: 0,
+                        pogoBoostRequested: false,
+                        pogoBouncePending: false,
+                        pogoBounceTimer: 0,
+                        pogoLeanAngle: 0,
+                        pogoLeanVelocity: 0,
+                        cannonAngle: 0,
+                        cannonAnchorX: 0,
+                        cannonAnchorY: 0,
+                        cannonPlatform: null,
+                        cannonFlightVx: 0,
+                        cannonFlash: 0,
+                        cannonCharging: false,
+                        cannonCharge: 0,
+                        cannonChargeDirection: 1,
+                        cannonJoystickWasActive: false,
+                        cannonPointerId: null,
+                        cannonPreviousZoom: null,
+                        cannonAimZoom: null,
+                        cannonZoomRestoreFrom: null,
+                        cannonZoomRestoreTime: 0,
+                        mountPreviousZoom: null,
+                        mountZoomFrom: null,
+                        mountZoomTo: null,
+                        mountZoomTime: 0,
+                        mountZoomDuration: 0,
+                        mountZoomClearPrevious: false,
+                        teleportRemaining: 0,
+                        teleportPopTime: 0,
+                        leavesEnabled: true,
+                        leafCanvas: null,
+                        visualMode: null,
+                        visualZoom: -1
+                    };
+
+                    const getInputs = () => {
+                        const joystick = api.getJoystick?.() || {};
+                        const keyboardX = (api.isActionActive?.('right') ? 1 : 0)
+                            - (api.isActionActive?.('left') ? 1 : 0);
+                        const joystickX = joystick.active && Math.abs(joystick.x || 0) > 0.14 ? joystick.x : 0;
+                        return {
+                            x: Math.max(-1, Math.min(1, joystickX || keyboardX)),
+                            up: Boolean(api.isActionActive?.('jump') || (joystick.active && joystick.y > 0.48)),
+                            down: Boolean(api.isActionActive?.('descend') || (joystick.active && joystick.y < -0.48)),
+                            joystickActive: Boolean(joystick.active)
+                        };
+                    };
+
+                    const focusGame = () => {
+                        try { canvas?.focus({ preventScroll: true }); } catch (_) { canvas?.focus(); }
+                    };
+
+                    const syncUi = () => {
+                        const transitionLocked = state.phase === 'dismounting'
+                            || state.phase === 'launched'
+                            || state.phase === 'teleport-pop';
+                        buttons.forEach((button) => {
+                            const selected = button.dataset.mount === state.mode
+                                && !transitionLocked;
+                            button.classList.toggle('is-active', selected && state.phase === 'active');
+                            button.classList.toggle('is-pending', selected && state.phase === 'mounting');
+                            button.setAttribute('aria-pressed', String(selected));
+                            button.disabled = transitionLocked;
+                        });
+                        returnButton.hidden = state.phase === 'default'
+                            || state.phase === 'launched'
+                            || state.phase === 'teleport-pop';
+                        returnButton.disabled = transitionLocked;
+                    };
+
+                    const syncLeaves = () => {
+                        if (leafButton) {
+                            leafButton.setAttribute('aria-pressed', String(state.leavesEnabled));
+                            leafButton.setAttribute('aria-label', state.leavesEnabled
+                                ? 'Turn ambient leaves off'
+                                : 'Turn ambient leaves on');
+                            leafButton.title = state.leavesEnabled ? 'Hide ambient leaves' : 'Show ambient leaves';
+                        }
+                        state.leafCanvas = state.leafCanvas || document.querySelector('.ambient-leaf-overlay');
+                        if (state.leafCanvas) state.leafCanvas.style.display = state.leavesEnabled ? '' : 'none';
+                    };
+
+                    const configureVisual = () => {
+                        const config = MODE_CONFIG[state.mode];
+                        if (!config) return;
+                        visual.dataset.mount = state.mode;
+                        visual.style.setProperty('--mount-color', config.color);
+                        visual.style.setProperty('--mount-glow', config.glow);
+                        visual.style.zIndex = String(config.layer);
+                        visual.style.opacity = String(config.opacity ?? 1);
+                        visual.style.setProperty('--cannon-power', '0');
+                        hoverCarUnderlay.style.zIndex = String(config.underlayLayer ?? 49);
+                        hoverCarOverlay.style.zIndex = String(config.overlayLayer ?? 51);
+                        hoverCarGlow.style.zIndex = String((config.underlayLayer ?? 49) - 1);
+                        hoverBoardGlow.style.zIndex = String((config.underlayLayer ?? 49) - 1);
+                        const artLayers = mountArtLayerSets[config.layeredArt];
+                        if (artLayers) {
+                            artLayers.forEach((layer, index) => {
+                                const configuredLayer = config.artLayerZ?.[index];
+                                const fallbackLayer = index === 0
+                                    ? (config.underlayLayer ?? config.layer ?? 49)
+                                    : (config.overlayLayer ?? config.layer ?? 51);
+                                layer.style.zIndex = String(configuredLayer ?? fallbackLayer);
+                            });
+                        }
+                        mountBlock.style.transform = '';
+                        mountBlock.style.transformOrigin = '';
+                        label.style.display = '';
+                        label.textContent = config.label;
+                        state.visualMode = state.mode;
+                        state.visualZoom = -1;
+                    };
+
+                    const hideHoverCarLayers = () => {
+                        hoverCarLayers.forEach((layer) => {
+                            layer.classList.remove('is-visible', 'is-summoning');
+                            layer.style.display = 'none';
+                        });
+                        hoverCarGlow.classList.remove('is-visible');
+                        hoverCarGlow.style.display = 'none';
+                    };
+
+                    const hideHoverBoardGlow = () => {
+                        hoverBoardGlow.classList.remove('is-visible');
+                        hoverBoardGlow.style.display = 'none';
+                    };
+
+                    const hideMountArtLayers = () => {
+                        allMountArtLayers.forEach((layer) => {
+                            layer.classList.remove('is-visible', 'is-summoning');
+                            layer.style.display = 'none';
+                        });
+                    };
+
+                    const autoJump = (velocity) => {
+                        const player = api.player;
+                        player.vy = velocity;
+                        player.onGround = false;
+                        player.currentPlatform = null;
+                        player.isJumping = true;
+                        player.jumpHeld = false;
+                        player.jumpHoldTime = 0;
+                        player.airJumpAvailable = false;
+                        player.isLandingAnimation = false;
+                    };
+
+                    const stopMountAnimationLock = () => {
+                        state.inertiaPlaying = false;
+                        state.pendingInertia = null;
+                        state.inertiaTimer = 0;
+                    };
+
+                    const playInertia = (kind, direction) => {
+                        if (!direction || state.inertiaPlaying || state.phase !== 'active') return;
+                        state.inertiaPlaying = true;
+                        state.pendingInertia = { kind, direction };
+                    };
+
+                    const flushInertiaAnimation = () => {
+                        if (!state.pendingInertia) return;
+                        const { kind, direction } = state.pendingInertia;
+                        state.pendingInertia = null;
+                        const animationName = kind === 'start'
+                            ? (direction > 0 ? 'BankingAnims/BankSwipeLeft_01' : 'BankingAnims/BankSwipeRight_01')
+                            : (direction > 0 ? 'BankingAnims/BankSwipeRight_01' : 'BankingAnims/BankSwipeLeft_01');
+                        const token = ++state.animationToken;
+                        state.inertiaTimer = 1.25;
+                        api.playAnimationOnce?.(animationName, () => {
+                            if (token !== state.animationToken) return;
+                            stopMountAnimationLock();
+                            if (state.phase === 'active' && MODE_CONFIG[state.mode]?.animation === 'idle') {
+                                api.setIdleAnimation?.();
+                            }
+                        });
+                    };
+
+                    const beginSkateboardPush = (direction) => {
+                        const config = MODE_CONFIG[state.mode];
+                        if (state.phase !== 'active' || !config?.skateboardPropulsion
+                            || state.skateboardPushActive || state.skateboardJumpActive
+                            || state.skateboardOllieCharging || state.skateboardOllieActive
+                            || !direction) return;
+                        state.skateboardPushActive = true;
+                        state.skateboardPushDirection = direction;
+                        const token = ++state.animationToken;
+                        const entry = api.playAnimationWithEvents?.(
+                            config.skateboardPushAnimation,
+                            (eventName) => {
+                                if (token !== state.animationToken
+                                    || state.phase !== 'active'
+                                    || state.mode !== 'skateboard'
+                                    || eventName !== config.skateboardPushEvent) return;
+                                const liveDirection = Math.sign(getInputs().x);
+                                if (!api.player.onGround
+                                    || liveDirection !== state.skateboardPushDirection) return;
+                                const isReversalPush = state.skateboardReversePushesRemaining > 0
+                                    && state.skateboardReverseDirection
+                                        === state.skateboardPushDirection;
+                                const pushImpulse = isReversalPush
+                                    ? config.skateboardReversePushImpulse
+                                    : config.skateboardPushImpulse;
+                                state.horizontalVelocity = Math.max(
+                                    -config.speed,
+                                    Math.min(
+                                        config.speed,
+                                        state.horizontalVelocity
+                                            + state.skateboardPushDirection
+                                                * pushImpulse
+                                    )
+                                );
+                                if (isReversalPush) {
+                                    state.skateboardReversePushesRemaining -= 1;
+                                    if (state.skateboardReversePushesRemaining <= 0) {
+                                        state.skateboardReversePushesRemaining = 0;
+                                        state.skateboardReverseDirection = 0;
+                                    }
+                                }
+                                api.player.vx = state.horizontalVelocity;
+                                state.commandedVelocity = state.horizontalVelocity;
+                            },
+                            () => {
+                                if (token !== state.animationToken) return;
+                                state.skateboardPushActive = false;
+                                state.skateboardPushDirection = 0;
+                                applyRiderAnimation();
+                            }
+                        );
+                        if (!entry) {
+                            state.skateboardPushActive = false;
+                            state.skateboardPushDirection = 0;
+                        }
+                    };
+
+                    const beginSkateboardOllieCharge = () => {
+                        const config = MODE_CONFIG[state.mode];
+                        if (state.phase !== 'active' || !config?.skateboardPropulsion
+                            || !api.player.onGround || state.skateboardOllieCharging
+                            || state.skateboardOllieActive) return;
+                        state.animationToken += 1;
+                        state.skateboardPushActive = false;
+                        state.skateboardPushDirection = 0;
+                        state.skateboardJumpActive = false;
+                        state.skateboardOllieCharging = true;
+                        api.setLoopAnimation?.(config.skateboardOllieChargeAnimation);
+                    };
+
+                    const launchSkateboardOllie = () => {
+                        const config = MODE_CONFIG[state.mode];
+                        if (state.phase !== 'active' || !config?.skateboardPropulsion
+                            || !state.skateboardOllieCharging) return false;
+                        state.skateboardOllieCharging = false;
+                        if (!api.player.onGround) {
+                            applyRiderAnimation();
+                            return false;
+                        }
+                        const token = ++state.animationToken;
+                        state.skateboardOllieActive = true;
+                        const heightMultiplier = Math.max(
+                            1,
+                            Number(config.skateboardOllieHeightMultiplier) || 2
+                        );
+                        autoJump(config.jump * Math.sqrt(heightMultiplier));
+                        const entry = api.playAnimationWithEvents?.(
+                            config.skateboardOllieLaunchAnimation,
+                            null,
+                            () => {
+                                if (token !== state.animationToken) return;
+                                state.skateboardOllieActive = false;
+                                applyRiderAnimation();
+                            }
+                        );
+                        if (!entry) {
+                            state.skateboardOllieActive = false;
+                            applyRiderAnimation();
+                        }
+                        return true;
+                    };
+
+                    const beginSkateboardJump = (jumpedFromStand = false) => {
+                        const config = MODE_CONFIG[state.mode];
+                        if (state.phase !== 'active' || !config?.skateboardPropulsion) return;
+                        state.animationToken += 1;
+                        const token = state.animationToken;
+                        state.skateboardPushActive = false;
+                        state.skateboardPushDirection = 0;
+                        state.skateboardJumpActive = true;
+                        const jumpAnimation = jumpedFromStand
+                            ? config.skateboardJumpStandAnimation
+                            : config.skateboardJumpAnimation;
+                        const entry = api.playAnimationWithEvents?.(
+                            jumpAnimation,
+                            null,
+                            () => {
+                                if (token !== state.animationToken) return;
+                                state.skateboardJumpActive = false;
+                                applyRiderAnimation();
+                            }
+                        );
+                        if (!entry) {
+                            state.skateboardJumpActive = false;
+                            applyRiderAnimation();
+                        }
+                    };
+
+                    const applyRiderAnimation = () => {
+                        if (state.phase !== 'active') return;
+                        const config = MODE_CONFIG[state.mode];
+                        if (!config) return;
+                        if (config.skateboardPropulsion) {
+                            if (state.skateboardPushActive || state.skateboardJumpActive
+                                || state.skateboardOllieCharging
+                                || state.skateboardOllieActive) return;
+                            const animationName = Math.abs(state.horizontalVelocity)
+                                > config.skateboardStopSpeed
+                                ? config.skateboardIdleMoveAnimation
+                                : config.skateboardIdleStandAnimation;
+                            api.setLoopAnimation?.(animationName);
+                        } else if (config.loopAnimation) {
+                            api.setLoopAnimation?.(config.loopAnimation);
+                        } else if (config.animation === 'race-car') {
+                            api.setLoopAnimation?.('StickerAnims/001_RaceCar');
+                        } else if (config.animation === 'frozen-pose') {
+                            api.setFrozenAnimation?.('_Gintama Poses_', 7 / 30);
+                        } else if (config.animation === 'idle' && !state.inertiaPlaying) {
+                            api.setIdleAnimation?.();
+                        }
+                    };
+
+                    const restoreCannonZoom = () => {
+                        if (Number.isFinite(state.cannonPreviousZoom)) {
+                            api.setZoom?.(state.cannonPreviousZoom);
+                        }
+                        state.cannonPreviousZoom = null;
+                        state.cannonAimZoom = null;
+                        state.cannonZoomRestoreFrom = null;
+                        state.cannonZoomRestoreTime = 0;
+                    };
+
+                    const startMountZoomTransition = (targetZoom, duration, clearPreviousOnComplete = false) => {
+                        const currentZoom = Number(api.getZoom?.());
+                        if (!Number.isFinite(currentZoom) || !Number.isFinite(targetZoom)) return;
+                        state.mountZoomFrom = currentZoom;
+                        state.mountZoomTo = targetZoom;
+                        state.mountZoomTime = 0;
+                        state.mountZoomDuration = Math.max(0.1, Number(duration) || 0.7);
+                        state.mountZoomClearPrevious = clearPreviousOnComplete;
+                    };
+
+                    const restoreMountZoom = () => {
+                        if (Number.isFinite(state.mountPreviousZoom)) {
+                            const duration = MODE_CONFIG[state.mode]?.zoomRestoreDuration || 0.8;
+                            startMountZoomTransition(state.mountPreviousZoom, duration, true);
+                        }
+                    };
+
+                    const restoreRiderVisual = () => {
+                        if (!playerElement) return;
+                        playerElement.style.opacity = '';
+                        playerElement.style.transform = '';
+                        playerElement.style.transformOrigin = '';
+                    };
+
+                    const finishTeleportPop = () => {
+                        if (state.phase !== 'teleport-pop') return;
+                        state.mode = null;
+                        state.phase = 'default';
+                        state.phaseTime = 0;
+                        state.horizontalVelocity = 0;
+                        state.commandedVelocity = 0;
+                        state.teleportRemaining = 0;
+                        state.teleportPopTime = 0;
+                        state.visualMode = null;
+                        visual.className = '';
+                        visual.style.display = 'none';
+                        restoreRiderVisual();
+                        api.stopJetpackVisibility?.();
+                        syncUi();
+                    };
+
+                    const beginTeleportPop = () => {
+                        const config = MODE_CONFIG[state.mode];
+                        if (state.phase !== 'active' || !config?.teleport) return;
+                        const player = api.player;
+                        if (config.zoomMultiplier) restoreMountZoom();
+                        state.phase = 'teleport-pop';
+                        state.phaseTime = 0;
+                        state.teleportRemaining = 0;
+                        state.teleportPopTime = config.popDuration || 0.18;
+                        state.horizontalVelocity = 0;
+                        state.commandedVelocity = 0;
+                        player.vx = 0;
+                        player.vy = 0;
+                        player.isMoving = false;
+                        player.isRunning = false;
+                        player.isJumping = false;
+                        player.jumpHeld = false;
+                        player.airJumpAvailable = false;
+                        restoreRiderVisual();
+                        visual.classList.remove('is-summoning');
+                        visual.classList.add('is-teleport-pop');
+                        syncUi();
+                    };
+
+                    const selectMount = (mode) => {
+                        if (!MODE_CONFIG[mode] || state.phase === 'dismounting'
+                            || state.phase === 'launched' || state.phase === 'teleport-pop') return;
+                        if (state.mode === mode && (state.phase === 'active' || state.phase === 'mounting')) {
+                            focusGame();
+                            return;
+                        }
+                        if (MODE_CONFIG[state.mode]?.cannon && !MODE_CONFIG[mode].cannon) restoreCannonZoom();
+                        if (MODE_CONFIG[state.mode]?.zoomMultiplier) restoreMountZoom();
+                        restoreRiderVisual();
+                        api.stopJetpackVisibility?.();
+                        state.animationToken += 1;
+                        stopMountAnimationLock();
+                        state.mode = mode;
+                        state.phase = 'mounting';
+                        state.phaseTime = 0;
+                        state.horizontalVelocity = api.player.vx || 0;
+                        state.commandedVelocity = state.horizontalVelocity;
+                        state.lastInputDirection = 0;
+                        state.pendingReverseDirection = 0;
+                        state.skateboardPushActive = false;
+                        state.skateboardPushDirection = 0;
+                        state.skateboardJumpActive = false;
+                        state.skateboardOllieCharging = false;
+                        state.skateboardOllieActive = false;
+                        state.skateboardReversePushesRemaining = 0;
+                        state.skateboardReverseDirection = 0;
+                        state.hoverCoastTime = 0;
+                        state.ballRotation = 0;
+                        state.impactBouncePumpTimer = 0;
+                        state.pogoCompression = 0;
+                        state.pogoBoostRequested = false;
+                        state.pogoBouncePending = false;
+                        state.pogoBounceTimer = 0;
+                        state.pogoLeanAngle = 0;
+                        state.pogoLeanVelocity = 0;
+                        state.cannonAngle = 0;
+                        state.cannonFlightVx = 0;
+                        state.cannonFlash = 0;
+                        state.cannonCharging = false;
+                        state.cannonCharge = 0;
+                        state.cannonChargeDirection = 1;
+                        state.cannonJoystickWasActive = false;
+                        state.cannonPointerId = null;
+                        state.teleportRemaining = 0;
+                        state.teleportPopTime = 0;
+                        if (Number.isFinite(MODE_CONFIG[mode].zoomMultiplier)) {
+                            const currentZoom = Number(api.getZoom?.());
+                            state.mountPreviousZoom = Number.isFinite(currentZoom) ? currentZoom : null;
+                            if (Number.isFinite(currentZoom)) {
+                                startMountZoomTransition(
+                                    currentZoom * MODE_CONFIG[mode].zoomMultiplier,
+                                    MODE_CONFIG[mode].zoomOutDuration,
+                                    false
+                                );
+                            }
+                        }
+                        if (MODE_CONFIG[mode].cannon) {
+                            const currentZoom = Number(api.getZoom?.());
+                            state.cannonPreviousZoom = Number.isFinite(currentZoom) ? currentZoom : null;
+                            state.cannonAimZoom = Number.isFinite(currentZoom)
+                                ? Math.min(currentZoom, MODE_CONFIG[mode].aimZoom)
+                                : null;
+                            state.cannonZoomRestoreFrom = null;
+                            state.cannonZoomRestoreTime = 0;
+                            state.cannonAnchorX = api.player.x;
+                            state.cannonAnchorY = api.player.y;
+                            state.cannonPlatform = api.player.currentPlatform;
+                            state.horizontalVelocity = 0;
+                            state.commandedVelocity = 0;
+                            api.player.vx = 0;
+                        } else {
+                            state.cannonPlatform = null;
+                        }
+                        api.player.isSkidding = false;
+                        visual.className = '';
+                        visual.style.display = 'none';
+                        configureVisual();
+                        autoJump(-1725);
+                        syncUi();
+                        focusGame();
+                    };
+
+                    const returnToDefault = () => {
+                        if (state.phase === 'default' || state.phase === 'dismounting'
+                            || state.phase === 'launched' || state.phase === 'teleport-pop') return;
+                        if (state.phase === 'active' && MODE_CONFIG[state.mode]?.teleport) {
+                            beginTeleportPop();
+                            focusGame();
+                            return;
+                        }
+                        state.phase = 'dismounting';
+                        state.phaseTime = 0;
+                        state.horizontalVelocity = api.player.vx || 0;
+                        state.commandedVelocity = state.horizontalVelocity;
+                        state.animationToken += 1;
+                        stopMountAnimationLock();
+                        if (MODE_CONFIG[state.mode]?.cannon) restoreCannonZoom();
+                        if (MODE_CONFIG[state.mode]?.zoomMultiplier) restoreMountZoom();
+                        state.cannonCharging = false;
+                        state.cannonCharge = 0;
+                        state.cannonChargeDirection = 1;
+                        state.cannonJoystickWasActive = false;
+                        state.cannonPointerId = null;
+                        state.teleportRemaining = 0;
+                        state.teleportPopTime = 0;
+                        restoreRiderVisual();
+                        api.stopJetpackVisibility?.();
+                        visual.className = '';
+                        visual.style.display = 'none';
+                        autoJump(-1725);
+                        syncUi();
+                        focusGame();
+                    };
+
+                    const launchCannon = () => {
+                        const config = MODE_CONFIG[state.mode];
+                        if (state.phase !== 'active' || !config?.cannon || !state.cannonCharging) return;
+
+                        const player = api.player;
+                        const angleRadians = state.cannonAngle * Math.PI / 180;
+                        const launchDirectionX = Math.sin(angleRadians);
+                        const launchDirectionY = -Math.cos(angleRadians);
+                        const chargeEase = state.cannonCharge * state.cannonCharge * (3 - 2 * state.cannonCharge);
+                        const launchPower = config.launchPowerMin
+                            + (config.launchPowerMax - config.launchPowerMin) * chargeEase;
+                        const muzzleDistance = config.height * 0.78;
+                        const pivotX = state.cannonAnchorX + player.width * 0.5;
+                        const pivotY = state.cannonAnchorY + player.height;
+                        const muzzleX = pivotX + launchDirectionX * muzzleDistance;
+                        const muzzleY = pivotY + launchDirectionY * muzzleDistance;
+
+                        player.x = muzzleX - player.width * 0.5;
+                        player.y = muzzleY - player.height * 0.5;
+                        player.vx = launchDirectionX * launchPower;
+                        player.vy = launchDirectionY * launchPower;
+                        player.onGround = false;
+                        player.currentPlatform = null;
+                        player.isJumping = true;
+                        player.jumpHeld = false;
+                        player.jumpHoldTime = 0;
+                        player.airJumpAvailable = false;
+                        player.hasDoubleJumped = true;
+                        player.isLandingAnimation = false;
+                        player.jumpUpIntroPlayed = false;
+                        player.fallIntroPlayed = false;
+                        player.facingRight = state.cannonAngle >= 0;
+
+                        state.phase = 'launched';
+                        state.phaseTime = 0;
+                        state.horizontalVelocity = player.vx;
+                        state.commandedVelocity = player.vx;
+                        state.cannonFlightVx = player.vx;
+                        state.cannonFlash = 0.18;
+                        state.cannonZoomRestoreFrom = Number(api.getZoom?.());
+                        state.cannonZoomRestoreTime = 0;
+                        state.cannonCharging = false;
+                        state.cannonCharge = 0;
+                        state.cannonChargeDirection = 1;
+                        state.cannonJoystickWasActive = false;
+                        state.cannonPointerId = null;
+                        restoreRiderVisual();
+                        syncUi();
+                        focusGame();
+                    };
+
+                    const beginCannonCharge = (event) => {
+                        const config = MODE_CONFIG[state.mode];
+                        if (state.phase !== 'active' || !config?.cannon || state.cannonCharging
+                            || (event.button ?? 0) !== 0 || event.isPrimary === false) return;
+                        // Touch input belongs exclusively to the virtual joystick.
+                        // Keep this fallback only for desktop mouse charging.
+                        if (event.pointerType !== 'mouse') return;
+                        state.cannonCharging = true;
+                        state.cannonCharge = 0;
+                        state.cannonChargeDirection = 1;
+                        state.cannonPointerId = event.pointerId ?? null;
+                        focusGame();
+                    };
+
+                    const releaseCannon = (event) => {
+                        if (!state.cannonCharging
+                            || (state.cannonPointerId != null && event.pointerId != null
+                                && event.pointerId !== state.cannonPointerId)) return;
+                        event.preventDefault();
+                        event.stopPropagation();
+                        launchCannon();
+                    };
+
+                    const cancelCannonCharge = (event) => {
+                        if (!state.cannonCharging
+                            || (state.cannonPointerId != null && event.pointerId != null
+                                && event.pointerId !== state.cannonPointerId)) return;
+                        state.cannonCharging = false;
+                        state.cannonCharge = 0;
+                        state.cannonChargeDirection = 1;
+                        state.cannonJoystickWasActive = false;
+                        state.cannonPointerId = null;
+                    };
+
+                    buttons.forEach((button) => {
+                        button.addEventListener('click', () => selectMount(button.dataset.mount));
+                    });
+                    returnButton.addEventListener('click', returnToDefault);
+                    board.addEventListener('pointerdown', beginCannonCharge);
+                    window.addEventListener('pointerup', releaseCannon, true);
+                    window.addEventListener('pointercancel', cancelCannonCharge, true);
+                    leafButton?.addEventListener('click', () => {
+                        state.leavesEnabled = !state.leavesEnabled;
+                        syncLeaves();
+                        leafButton.blur();
+                        focusGame();
+                    });
+                    syncUi();
+                    syncLeaves();
+
+                    return {
+                        beforeInput(dt) {
+                            const safeDt = Math.min(Math.max(dt || 0, 0), 0.05);
+                            const zoomDt = Math.min(Math.max(dt || 0, 0), 0.12);
+                            const timerDt = Math.min(Math.max(dt || 0, 0), 0.12);
+                            state.elapsed += safeDt;
+                            state.phaseTime += safeDt;
+                            state.impactBouncePumpTimer = Math.max(
+                                0,
+                                state.impactBouncePumpTimer - safeDt
+                            );
+                            state.wasGrounded = api.player.onGround;
+                            if (state.phase === 'active' && MODE_CONFIG[state.mode]?.teleport) {
+                                state.teleportRemaining = Math.max(0, state.teleportRemaining - timerDt);
+                                if (state.teleportRemaining <= 0.0001) beginTeleportPop();
+                            } else if (state.phase === 'teleport-pop') {
+                                state.teleportPopTime = Math.max(0, state.teleportPopTime - timerDt);
+                                if (state.teleportPopTime <= 0.0001) finishTeleportPop();
+                            }
+                            if (state.pogoBouncePending) {
+                                state.pogoBounceTimer = Math.max(0, state.pogoBounceTimer - safeDt);
+                            }
+                            const pogoConfig = MODE_CONFIG[state.mode];
+                            const pogoCompressionTarget = state.pogoBouncePending ? 1 : 0;
+                            const pogoCompressionRate = state.pogoBouncePending
+                                ? (pogoConfig?.pogoCompressionRate || 8)
+                                : (pogoConfig?.pogoReleaseRate || 3.2);
+                            const pogoCompressionBlend = 1 - Math.exp(-pogoCompressionRate * safeDt);
+                            state.pogoCompression += (pogoCompressionTarget - state.pogoCompression) * pogoCompressionBlend;
+                            if (!state.pogoBouncePending && state.pogoCompression < 0.001) state.pogoCompression = 0;
+                            if (state.phase === 'active' && pogoConfig?.pogoVisual) {
+                                const pogoInputs = getInputs();
+                                const speedRatio = Math.max(-1, Math.min(
+                                    1,
+                                    api.player.vx / Math.max(1, pogoConfig.speed)
+                                ));
+                                const targetLean = api.player.onGround
+                                    ? pogoInputs.x * pogoConfig.pogoGroundLean
+                                    : speedRatio * pogoConfig.pogoAirLean;
+                                const leanForce = (targetLean - state.pogoLeanAngle)
+                                    * (pogoConfig.pogoLeanStiffness || 48);
+                                const dampingForce = state.pogoLeanVelocity
+                                    * (pogoConfig.pogoLeanDamping || 7.2);
+                                state.pogoLeanVelocity += (leanForce - dampingForce) * safeDt;
+                                state.pogoLeanAngle += state.pogoLeanVelocity * safeDt;
+                                const leanLimit = pogoConfig.pogoLeanLimit || 24;
+                                if (Math.abs(state.pogoLeanAngle) > leanLimit) {
+                                    state.pogoLeanAngle = Math.sign(state.pogoLeanAngle) * leanLimit;
+                                    state.pogoLeanVelocity *= -0.22;
+                                }
+                            }
+                            state.cannonFlash = Math.max(0, state.cannonFlash - safeDt);
+                            if (state.cannonCharging && state.phase === 'active') {
+                                const chargeTime = Math.max(0.1, MODE_CONFIG[state.mode]?.chargeTime || 1);
+                                state.cannonCharge += state.cannonChargeDirection * safeDt / chargeTime;
+                                if (state.cannonCharge >= 1) {
+                                    state.cannonCharge = 1;
+                                    state.cannonChargeDirection = -1;
+                                } else if (state.cannonCharge <= 0) {
+                                    state.cannonCharge = 0;
+                                    state.cannonChargeDirection = 1;
+                                }
+                            }
+                            const modeConfig = MODE_CONFIG[state.mode];
+                            const currentZoom = Number(api.getZoom?.());
+                            if (Number.isFinite(state.mountZoomFrom)
+                                && Number.isFinite(state.mountZoomTo)
+                                && Number.isFinite(currentZoom)) {
+                                state.mountZoomTime = Math.min(
+                                    state.mountZoomDuration,
+                                    state.mountZoomTime + zoomDt
+                                );
+                                const zoomT = Math.max(0, Math.min(
+                                    1,
+                                    state.mountZoomTime / state.mountZoomDuration
+                                ));
+                                const easedZoomT = zoomT * zoomT * (3 - 2 * zoomT);
+                                api.setZoom?.(
+                                    state.mountZoomFrom
+                                    + (state.mountZoomTo - state.mountZoomFrom) * easedZoomT
+                                );
+                                if (zoomT >= 1) {
+                                    state.mountZoomFrom = null;
+                                    state.mountZoomTo = null;
+                                    state.mountZoomTime = 0;
+                                    state.mountZoomDuration = 0;
+                                    if (state.mountZoomClearPrevious) state.mountPreviousZoom = null;
+                                    state.mountZoomClearPrevious = false;
+                                }
+                            }
+                            if (modeConfig?.cannon && Number.isFinite(currentZoom)) {
+                                if ((state.phase === 'mounting' || state.phase === 'active')
+                                    && Number.isFinite(state.cannonAimZoom)) {
+                                    const zoomDistance = Math.abs((state.cannonPreviousZoom ?? currentZoom) - state.cannonAimZoom);
+                                    const zoomRate = zoomDistance / Math.max(0.1, modeConfig.zoomOutDuration || 0.5);
+                                    api.setZoom?.(moveToward(currentZoom, state.cannonAimZoom, zoomRate * zoomDt));
+                                } else if (state.phase === 'launched' && Number.isFinite(state.cannonPreviousZoom)) {
+                                    state.cannonZoomRestoreTime += zoomDt;
+                                    const restoreFrom = Number.isFinite(state.cannonZoomRestoreFrom)
+                                        ? state.cannonZoomRestoreFrom
+                                        : currentZoom;
+                                    const restoreT = Math.max(0, Math.min(1,
+                                        state.cannonZoomRestoreTime / Math.max(0.1, modeConfig.zoomRestoreDuration || 1)));
+                                    const easedRestore = restoreT * restoreT * (3 - 2 * restoreT);
+                                    api.setZoom?.(restoreFrom
+                                        + (state.cannonPreviousZoom - restoreFrom) * easedRestore);
+                                }
+                            }
+                            if (state.inertiaTimer > 0) {
+                                state.inertiaTimer = Math.max(0, state.inertiaTimer - safeDt);
+                                if (state.inertiaTimer === 0) stopMountAnimationLock();
+                            }
+                            if (state.mode === 'jetpack' && state.phase === 'active') {
+                                api.setJetpackEnabled?.(true);
+                            } else if (state.phase !== 'default') {
+                                api.setJetpackEnabled?.(false);
+                            }
+                            if (state.phase === 'active') api.player.isSkidding = false;
+                        },
+
+                        afterInput(dt) {
+                            const player = api.player;
+                            const inputs = getInputs();
+                            const jumpJustPressed = inputs.up && !state.jumpWasPressed;
+                            state.jumpWasPressed = inputs.up;
+                            state.pogoBoostRequested = state.mode === 'pogo-stick' && inputs.up;
+
+                            if (state.phase !== 'active') {
+                                if (state.phase === 'launched') {
+                                    player.vx = state.cannonFlightVx;
+                                    player.jumpHeld = false;
+                                    player.airJumpAvailable = false;
+                                    return;
+                                }
+                                if (state.phase === 'teleport-pop') {
+                                    player.vx = 0;
+                                    player.vy = 0;
+                                    player.isMoving = false;
+                                    player.isRunning = false;
+                                    player.jumpHeld = false;
+                                    player.airJumpAvailable = false;
+                                    return;
+                                }
+                                if (state.phase === 'mounting' || state.phase === 'dismounting') {
+                                    if (state.phase === 'mounting' && MODE_CONFIG[state.mode]?.cannon) {
+                                        player.x = state.cannonAnchorX;
+                                        player.vx = 0;
+                                    } else {
+                                        player.vx *= Math.max(0, 1 - 3.2 * dt);
+                                    }
+                                    player.airJumpAvailable = false;
+                                }
+                                return;
+                            }
+
+                            const config = MODE_CONFIG[state.mode];
+                            if (!config) return;
+                            if (config.impactBounce && jumpJustPressed) {
+                                state.impactBouncePumpTimer = config.impactBounceBuffer ?? 0.24;
+                                if (state.wasGrounded) {
+                                    state.impactBouncePumpTimer = 0;
+                                    autoJump(config.jump);
+                                }
+                            }
+                            if (config.cannon) {
+                                const joystickReleased = state.cannonJoystickWasActive && !inputs.joystickActive;
+                                state.cannonJoystickWasActive = inputs.joystickActive;
+                                if (joystickReleased && state.cannonCharging
+                                    && state.cannonPointerId === 'joystick') {
+                                    launchCannon();
+                                    return;
+                                }
+                                if (inputs.joystickActive && !state.cannonCharging) {
+                                    state.cannonCharging = true;
+                                    state.cannonCharge = 0;
+                                    state.cannonChargeDirection = 1;
+                                    state.cannonPointerId = 'joystick';
+                                }
+                                state.cannonAngle = Math.max(-config.maxAimAngle, Math.min(config.maxAimAngle,
+                                    state.cannonAngle + inputs.x * config.aimSpeed * Math.min(dt, 0.05)));
+                                player.x = state.cannonAnchorX;
+                                player.y = state.cannonAnchorY;
+                                player.vx = 0;
+                                player.vy = 0;
+                                player.onGround = true;
+                                player.currentPlatform = state.cannonPlatform;
+                                player.isMoving = false;
+                                player.isRunning = false;
+                                player.isJumping = false;
+                                player.jumpHeld = false;
+                                player.airJumpAvailable = false;
+                                player.facingRight = state.cannonAngle >= 0;
+                                return;
+                            }
+                            if (config.nativeJetpack) {
+                                if (player.onGround) {
+                                    state.horizontalVelocity = player.vx;
+                                    state.commandedVelocity = player.vx;
+                                    return;
+                                }
+                                const targetVx = inputs.x * config.speed;
+                                const horizontalRate = Math.abs(inputs.x) > 0.01
+                                    ? config.accel
+                                    : config.decel;
+                                state.horizontalVelocity = moveToward(
+                                    state.horizontalVelocity,
+                                    targetVx,
+                                    horizontalRate * dt
+                                );
+                                player.vx = state.horizontalVelocity;
+                                state.commandedVelocity = player.vx;
+                                player.isMoving = Math.abs(player.vx) > 8;
+                                player.isRunning = player.isMoving
+                                    && Math.abs(player.vx) > config.speed * 0.58;
+                                return;
+                            }
+                            if (config.skateboardPropulsion) {
+                                const inputDirection = Math.sign(inputs.x);
+                                const ollieHeld = inputs.joystickActive && inputs.down;
+                                if (state.skateboardOllieCharging && !player.onGround) {
+                                    state.skateboardOllieCharging = false;
+                                    applyRiderAnimation();
+                                } else if (state.skateboardOllieCharging && !ollieHeld) {
+                                    launchSkateboardOllie();
+                                } else if (player.onGround && ollieHeld
+                                    && !state.skateboardJumpActive
+                                    && !state.skateboardOllieActive) {
+                                    beginSkateboardOllieCharge();
+                                }
+                                const drag = player.onGround
+                                    ? config.decel
+                                    : config.skateboardAirDrag;
+                                state.horizontalVelocity = moveToward(
+                                    state.horizontalVelocity,
+                                    0,
+                                    drag * dt
+                                );
+                                if (Math.abs(state.horizontalVelocity)
+                                    < config.skateboardStopSpeed) {
+                                    state.horizontalVelocity = 0;
+                                }
+                                const movingOppositeInput = inputDirection
+                                    && Math.sign(state.horizontalVelocity)
+                                    && inputDirection !== Math.sign(state.horizontalVelocity);
+                                if (state.skateboardReversePushesRemaining > 0
+                                    && inputDirection !== state.skateboardReverseDirection) {
+                                    state.skateboardReversePushesRemaining = 0;
+                                    state.skateboardReverseDirection = 0;
+                                }
+                                if (movingOppositeInput
+                                    && state.skateboardReversePushesRemaining === 0) {
+                                    state.skateboardReversePushesRemaining
+                                        = config.skateboardReversePushCount;
+                                    state.skateboardReverseDirection = inputDirection;
+                                }
+                                if (player.onGround && inputDirection
+                                    && !state.skateboardPushActive
+                                    && !state.skateboardOllieCharging
+                                    && !state.skateboardOllieActive
+                                    && (Math.abs(state.horizontalVelocity)
+                                        <= config.skateboardPushThreshold
+                                        || movingOppositeInput)) {
+                                    beginSkateboardPush(inputDirection);
+                                }
+                                player.vx = state.horizontalVelocity;
+                                state.commandedVelocity = player.vx;
+                                player.isMoving = Math.abs(player.vx) > config.skateboardStopSpeed;
+                                player.isRunning = false;
+                                const skateboardTakeoff = state.wasGrounded
+                                    && !player.onGround
+                                    && player.vy < 0
+                                    && !state.skateboardOllieActive;
+                                if (skateboardTakeoff) {
+                                    const jumpedFromStand = player.currentAnimation
+                                        === config.skateboardIdleStandAnimation;
+                                    player.vy = config.jump;
+                                    player.currentPlatform = null;
+                                    player.isJumping = true;
+                                    player.jumpHoldTime = 0;
+                                    beginSkateboardJump(jumpedFromStand);
+                                }
+                                if (!player.onGround) player.airJumpAvailable = false;
+                                return;
+                            }
+
+                            let inputX = inputs.x;
+                            if (config.autonomousDrift && Math.abs(inputX) < 0.01) {
+                                inputX = Math.sin(state.elapsed * 0.48) * 0.1
+                                    + Math.sin(state.elapsed * 0.19 + 1.7) * 0.065;
+                            }
+                            const inputDirection = Math.sign(inputs.x);
+                            const velocityDirection = Math.sign(state.horizontalVelocity);
+                            const targetVx = inputX * config.speed;
+                            const airControl = player.onGround ? 1 : (config.airControl ?? 1);
+
+                            if (config.inertia && state.wasGrounded) {
+                                if (inputDirection && !state.lastInputDirection && Math.abs(state.horizontalVelocity) < 120) {
+                                    playInertia('start', inputDirection);
+                                } else if (inputDirection && velocityDirection && inputDirection !== velocityDirection
+                                    && Math.abs(state.horizontalVelocity) > 220) {
+                                    playInertia('stop', velocityDirection);
+                                }
+                            }
+
+                            if (config.brakeAccel && inputDirection && velocityDirection && inputDirection !== velocityDirection) {
+                                state.pendingReverseDirection = inputDirection;
+                                state.horizontalVelocity = moveToward(
+                                    state.horizontalVelocity,
+                                    0,
+                                    config.brakeAccel * airControl * dt
+                                );
+                            } else {
+                                if (!inputDirection) state.pendingReverseDirection = 0;
+                                const acceleratingFromBrake = inputDirection
+                                    && state.pendingReverseDirection === inputDirection;
+                                const rate = (inputX
+                                    ? (acceleratingFromBrake ? config.reverseAccel : config.accel)
+                                    : config.decel) * airControl;
+                                state.horizontalVelocity = moveToward(state.horizontalVelocity, targetVx, rate * dt);
+                                if (acceleratingFromBrake && Math.sign(state.horizontalVelocity) === inputDirection
+                                    && Math.abs(state.horizontalVelocity) > config.speed * 0.25) {
+                                    state.pendingReverseDirection = 0;
+                                }
+                            }
+                            if (config.plantFootOnGround && player.onGround) {
+                                state.horizontalVelocity = 0;
+                            }
+                            player.vx = state.horizontalVelocity;
+                            state.commandedVelocity = player.vx;
+                            if (config.invertFacing && Math.abs(player.vx) > 8) {
+                                player.facingRight = player.vx > 0;
+                            }
+                            if (config.rollVisual) {
+                                const radius = Math.max(1, config.width * 0.5);
+                                state.ballRotation = (state.ballRotation
+                                    + (player.vx * Math.min(dt, 0.05) / radius) * (180 / Math.PI)) % 360;
+                            }
+                            player.isMoving = Math.abs(player.vx) > 8;
+                            player.isRunning = player.isMoving && Math.abs(player.vx) > config.speed * 0.58;
+                            state.lastInputDirection = inputDirection;
+
+                            if (!config.autoBounce && !config.impactBounce
+                                && jumpJustPressed && state.wasGrounded) {
+                                if (config.jumpMomentumBoost) {
+                                    const pumpDirection = Math.sign(inputs.x)
+                                        || Math.sign(state.horizontalVelocity);
+                                    state.horizontalVelocity = Math.max(
+                                        -config.speed,
+                                        Math.min(
+                                            config.speed,
+                                            state.horizontalVelocity
+                                                + pumpDirection * config.jumpMomentumBoost
+                                        )
+                                    );
+                                    player.vx = state.horizontalVelocity;
+                                    state.commandedVelocity = player.vx;
+                                }
+                                player.vy = config.jump;
+                                player.onGround = false;
+                                player.currentPlatform = null;
+                                player.isJumping = true;
+                                player.jumpHoldTime = 0;
+                            }
+
+                            if (!player.onGround) player.airJumpAvailable = false;
+
+                            if (config.flight && (!player.onGround || inputs.up || config.sustainedFlight)) {
+                                let targetVy = 0;
+                                const reachedFlightCeiling = config.flightCeiling != null
+                                    && player.y <= state.flightOriginY - config.flightCeiling;
+                                if (inputs.up && !reachedFlightCeiling) {
+                                    targetVy = config.ascent;
+                                    state.hoverCoastTime = 0;
+                                } else if (inputs.up) {
+                                    targetVy = 80;
+                                    state.hoverCoastTime = 0;
+                                } else if (inputs.down) {
+                                    targetVy = config.descent;
+                                    state.hoverCoastTime = 0;
+                                } else if (config.flight === 'jet') {
+                                    state.hoverCoastTime += dt;
+                                    const fallBlend = Math.max(0, Math.min(1,
+                                        (state.hoverCoastTime - config.descentDelay) / 1.15));
+                                    const easedFallBlend = fallBlend * fallBlend * (3 - 2 * fallBlend);
+                                    targetVy = config.slowDescent
+                                        + (config.descent - config.slowDescent) * easedFallBlend;
+                                } else if (config.flight === 'cloud') {
+                                    targetVy = Math.sin(state.elapsed * 0.72) * 48;
+                                } else if (config.flight === 'hover-car') {
+                                    targetVy = Math.sin(
+                                        state.elapsed * (config.hoverRate || 0.65)
+                                    ) * (config.hoverVelocity || 18);
+                                }
+                                const verticalRate = config.verticalAccel * dt;
+                                player.vy = moveToward(player.vy, targetVy, verticalRate) - GRAVITY * dt;
+                                player.isJumping = false;
+                            } else if (!player.onGround && config.airGravity != null) {
+                                const desiredGravity = player.vy < 0 ? (config.risingGravity ?? config.airGravity) : config.airGravity;
+                                player.vy += (desiredGravity - GRAVITY) * dt;
+                                if (config.maxFall != null) player.vy = Math.min(player.vy, config.maxFall - GRAVITY * dt);
+                            }
+                        },
+
+                        afterPhysics() {
+                            const player = api.player;
+                            if (state.phase === 'mounting' && state.phaseTime > 0.18 && player.onGround) {
+                                state.phase = 'active';
+                                state.phaseTime = 0;
+                                state.horizontalVelocity = player.vx || 0;
+                                state.flightOriginY = player.y;
+                                const activatedConfig = MODE_CONFIG[state.mode];
+                                if (activatedConfig?.cannon) {
+                                    state.cannonAnchorX = player.x;
+                                    state.cannonAnchorY = player.y;
+                                    state.cannonPlatform = player.currentPlatform;
+                                    state.horizontalVelocity = 0;
+                                    state.commandedVelocity = 0;
+                                    player.vx = 0;
+                                    player.vy = 0;
+                                }
+                                if (activatedConfig?.teleport) {
+                                    state.teleportRemaining = activatedConfig.duration;
+                                    autoJump(activatedConfig.activationLift || -600);
+                                }
+                                visual.classList.remove('is-summoning');
+                                if (activatedConfig?.nativeJetpack) api.setJetpackEnabled?.(true);
+                                syncUi();
+                            } else if (state.phase === 'dismounting' && state.phaseTime > 0.18 && player.onGround) {
+                                state.mode = null;
+                                state.phase = 'default';
+                                state.phaseTime = 0;
+                                state.horizontalVelocity = 0;
+                                state.commandedVelocity = 0;
+                                state.visualMode = null;
+                                restoreRiderVisual();
+                                api.stopJetpackVisibility?.();
+                                syncUi();
+                            } else if (state.phase === 'launched' && state.phaseTime > 0.12 && player.onGround) {
+                                restoreCannonZoom();
+                                state.mode = null;
+                                state.phase = 'default';
+                                state.phaseTime = 0;
+                                state.horizontalVelocity = 0;
+                                state.commandedVelocity = 0;
+                                state.cannonFlightVx = 0;
+                                state.cannonFlash = 0;
+                                state.cannonPlatform = null;
+                                state.visualMode = null;
+                                visual.className = '';
+                                visual.style.display = 'none';
+                                restoreRiderVisual();
+                                api.stopJetpackVisibility?.();
+                                syncUi();
+                            } else if (state.phase === 'launched') {
+                                state.cannonFlightVx = player.vx;
+                            } else if (state.phase === 'active' && Math.abs(player.vx) + 1 < Math.abs(state.horizontalVelocity)) {
+                                const config = MODE_CONFIG[state.mode];
+                                if (config?.inertia && Math.abs(state.commandedVelocity) > 280
+                                    && Math.abs(player.vx) < Math.abs(state.commandedVelocity) * 0.28) {
+                                    playInertia('stop', Math.sign(state.commandedVelocity));
+                                }
+                                state.horizontalVelocity = player.vx;
+                            }
+                            if (state.phase === 'active' && player.onGround) {
+                                state.flightOriginY = player.y;
+                                state.hoverCoastTime = 0;
+                            }
+                            const activeConfig = MODE_CONFIG[state.mode];
+                            if (state.phase === 'active' && activeConfig?.impactBounce
+                                && !state.wasGrounded && player.onGround) {
+                                const landingImpact = Math.max(
+                                    0,
+                                    Number(player.lastLandingImpactSpeed) || 0
+                                );
+                                const pumpRequested = state.impactBouncePumpTimer > 0
+                                    || getInputs().up;
+                                const bounceSpeed = Math.min(
+                                    activeConfig.impactBounceMax ?? 2050,
+                                    (activeConfig.impactBounceBase ?? 0)
+                                        + landingImpact * (activeConfig.impactBounceScale ?? 0.72)
+                                        + (pumpRequested ? (activeConfig.impactBouncePump ?? 0) : 0)
+                                );
+                                if (landingImpact >= (activeConfig.impactBounceMinImpact ?? 0)
+                                    && bounceSpeed >= (activeConfig.impactBounceMinSpeed ?? 0)) {
+                                    if (pumpRequested) state.impactBouncePumpTimer = 0;
+                                    autoJump(-bounceSpeed);
+                                }
+                            }
+                            if (state.phase === 'active' && activeConfig?.autoBounce && player.onGround) {
+                                if (!state.pogoBouncePending) {
+                                    state.pogoBouncePending = true;
+                                    state.pogoBounceTimer = activeConfig.bounceDelay || 0;
+                                } else if (state.pogoBounceTimer <= 0) {
+                                    state.pogoBouncePending = false;
+                                    const springBase = state.pogoBoostRequested
+                                        ? activeConfig.boostedJump
+                                        : activeConfig.jump;
+                                    const landingImpact = Math.max(0, Number(player.lastLandingImpactSpeed) || 0);
+                                    const impactScale = state.pogoBoostRequested
+                                        ? activeConfig.springImpactScale
+                                        : activeConfig.idleSpringImpactScale;
+                                    const maxImpactBonus = state.pogoBoostRequested
+                                        ? activeConfig.springMaxBonus
+                                        : activeConfig.idleSpringMaxBonus;
+                                    const impactBonus = Math.min(maxImpactBonus || 0,
+                                        landingImpact * (impactScale || 0));
+                                    if (activeConfig.plantFootOnGround) {
+                                        const launchInputX = getInputs().x;
+                                        const launchVx = launchInputX * (activeConfig.pogoLaunchSpeed || 0);
+                                        state.horizontalVelocity = launchVx;
+                                        state.commandedVelocity = launchVx;
+                                        player.vx = launchVx;
+                                    }
+                                    autoJump(springBase - impactBonus);
+                                }
+                            } else if (activeConfig?.autoBounce && state.pogoBouncePending) {
+                                state.pogoBouncePending = false;
+                                state.pogoBounceTimer = 0;
+                            }
+                            flushInertiaAnimation();
+                            applyRiderAnimation();
+                        },
+
+                        render(camera, zoomLevel) {
+                            syncLeaves();
+                            const config = MODE_CONFIG[state.mode];
+                            const teleportActive = state.phase === 'active' && Boolean(config?.teleport);
+                            if (playerElement) playerElement.style.opacity = teleportActive ? '0' : '';
+                            const launchedFlash = state.phase === 'launched' && state.cannonFlash > 0;
+                            const show = state.mode && state.phase !== 'default' && state.phase !== 'dismounting'
+                                && (state.phase === 'active'
+                                    || (state.phase === 'mounting' && state.phaseTime >= 0.11)
+                                    || launchedFlash
+                                    || (state.phase === 'teleport-pop' && state.teleportPopTime > 0));
+                            if (!show) {
+                                visual.classList.remove('is-visible', 'is-summoning', 'is-firing', 'is-charging', 'is-teleport-pop');
+                                visual.style.display = 'none';
+                                hideHoverCarLayers();
+                                hideHoverBoardGlow();
+                                hideMountArtLayers();
+                                return;
+                            }
+
+                            const player = api.player;
+                            if (!config) return;
+                            if (config.hideVisual) {
+                                visual.classList.remove('is-visible', 'is-summoning', 'is-firing', 'is-charging', 'is-teleport-pop');
+                                visual.style.display = 'none';
+                                hideHoverCarLayers();
+                                hideMountArtLayers();
+                                return;
+                            }
+                            if (state.visualMode !== state.mode) configureVisual();
+                            const usesHoverCarLayers = Boolean(config.layeredHoverCar);
+                            const activeMountArtLayers = mountArtLayerSets[config.layeredArt] || null;
+                            const usesLayeredMountAssets = usesHoverCarLayers || Boolean(activeMountArtLayers);
+                            visual.style.display = usesLayeredMountAssets && !config.cannon ? 'none' : '';
+                            if (usesHoverCarLayers) {
+                                hoverCarLayers.forEach((layer) => {
+                                    layer.style.display = '';
+                                    layer.classList.add('is-visible');
+                                    layer.classList.toggle('is-summoning', state.phase === 'mounting');
+                                });
+                                hoverCarGlow.style.display = '';
+                                hoverCarGlow.classList.add('is-visible');
+                            } else {
+                                hideHoverCarLayers();
+                            }
+                            if (config.bottomGlow) {
+                                hoverBoardGlow.style.display = '';
+                                hoverBoardGlow.classList.add('is-visible');
+                            } else {
+                                hideHoverBoardGlow();
+                            }
+                            if (activeMountArtLayers) {
+                                hideMountArtLayers();
+                                activeMountArtLayers.forEach((layer) => {
+                                    layer.style.display = '';
+                                    layer.classList.add('is-visible');
+                                    layer.classList.toggle('is-summoning', state.phase === 'mounting');
+                                });
+                            } else {
+                                hideMountArtLayers();
+                            }
+                            visual.classList.add('is-visible');
+                            visual.classList.toggle('is-summoning', state.phase === 'mounting');
+                            visual.classList.toggle('is-firing', launchedFlash);
+                            visual.classList.toggle('is-charging', state.cannonCharging);
+                            visual.classList.toggle('is-teleport-pop', state.phase === 'teleport-pop');
+                            visual.style.setProperty('--cannon-power', String(state.cannonCharge));
+                            if (config.teleport) {
+                                const showCountdown = state.phase === 'active' || state.phase === 'teleport-pop';
+                                const remaining = Math.max(0, state.teleportRemaining);
+                                const wholeSeconds = Math.floor(remaining);
+                                const hundredths = Math.min(
+                                    99,
+                                    Math.floor((remaining - wholeSeconds) * 100 + 0.0001)
+                                );
+                                label.textContent = `${String(wholeSeconds).padStart(2, '0')}:${String(hundredths).padStart(2, '0')}`;
+                                label.style.display = showCountdown ? 'flex' : 'none';
+                            }
+
+                            const zoom = Math.max(0.01, zoomLevel || 1);
+                            if (state.visualZoom !== zoom) {
+                                visual.style.width = `${config.width * zoom}px`;
+                                visual.style.height = `${config.height * zoom}px`;
+                                if (usesHoverCarLayers) {
+                                    hoverCarLayers.forEach((layer) => {
+                                        layer.style.width = `${config.width * zoom}px`;
+                                        layer.style.height = `${config.height * zoom}px`;
+                                    });
+                                    hoverCarGlow.style.width = `${config.width * 0.78 * zoom}px`;
+                                    hoverCarGlow.style.height = `${config.height * 0.20 * zoom}px`;
+                                }
+                                if (activeMountArtLayers) {
+                                    activeMountArtLayers.forEach((layer) => {
+                                        layer.style.width = `${config.width * zoom}px`;
+                                        layer.style.height = `${config.height * zoom}px`;
+                                    });
+                                }
+                                if (config.bottomGlow) {
+                                    hoverBoardGlow.style.width = `${config.width * config.bottomGlowWidth * zoom}px`;
+                                    hoverBoardGlow.style.height = `${config.height * config.bottomGlowHeight * zoom}px`;
+                                }
+                                state.visualZoom = zoom;
+                            }
+
+                            const mountX = config.cannon ? state.cannonAnchorX : player.x;
+                            const mountY = config.cannon ? state.cannonAnchorY : player.y;
+                            const centerX = (mountX + player.width * 0.5 - camera.x) * zoom;
+                            let anchorY = mountY + player.height;
+                            if (config.placement === 'above') anchorY = mountY - 13 - (config.anchorOffset || 0);
+                            else if (config.placement === 'above-high') anchorY = mountY - 58 - (config.anchorOffset || 0);
+                            const bobWorld = config.bob
+                                ? Math.sin(
+                                    state.elapsed
+                                        * (config.bobRate ?? (config.flight ? 3.4 : 4.8))
+                                ) * config.bob
+                                : 0;
+                            const sharedRiderOffset = -(config.riderLift || 0) + (config.riderBob ? bobWorld : 0);
+                            const pogoCompressionAmount = config.pogoCompressionAmount ?? 0.18;
+                            const compressionOffset = config.pogoVisual
+                                ? state.pogoCompression * config.height * pogoCompressionAmount
+                                : 0;
+                            const riderVisualOffset = sharedRiderOffset
+                                - (config.riderOnlyLift || 0)
+                                - (state.phase === 'active' ? (config.cannonRiderLift || 0) : 0)
+                                + compressionOffset;
+                            const screenY = (anchorY - camera.y + sharedRiderOffset) * zoom;
+                            const speedRatio = Math.max(-1, Math.min(1, player.vx / Math.max(1, config.speed)));
+                            const hatSwingAngle = config.hatPendulum
+                                ? speedRatio * (config.hatMaxTilt || 18)
+                                    + Math.sin(state.elapsed * 2.2) * 2.5
+                                : 0;
+                            const facingScale = player.facingRight ? 1 : -1;
+                            const skateboardAirAnimationActive = state.mode === 'skateboard'
+                                && (state.skateboardJumpActive
+                                    || state.skateboardOllieCharging
+                                    || state.skateboardOllieActive);
+                            const skateboardJumpRotation = skateboardAirAnimationActive
+                                ? (Number(api.getBoneRotation?.(
+                                    config.skateboardJumpRotationBone
+                                )) || 0) * facingScale
+                                : 0;
+                            const tilt = config.rollVisual
+                                ? state.ballRotation
+                                : (config.flight
+                                    ? speedRatio * 5
+                                    : (state.mode === 'skateboard' || state.mode === 'hoverboard'
+                                        ? speedRatio * 2.5
+                                        : (config.pogoVisual
+                                            ? state.pogoLeanAngle
+                                            : 0)));
+                            if (playerElement && (config.riderLift || config.riderBob || config.riderOnlyLift
+                                || config.pogoVisual || (config.cannon && state.phase === 'active'))) {
+                                const baseTop = Number.parseFloat(playerElement.style.top) || 0;
+                                playerElement.style.top = `${baseTop + riderVisualOffset * zoom}px`;
+                            }
+                            if (playerElement && config.riderOffsetX) {
+                                const baseLeft = Number.parseFloat(playerElement.style.left) || 0;
+                                playerElement.style.left = `${baseLeft + config.riderOffsetX * facingScale * zoom}px`;
+                            }
+                            if (playerElement && config.pogoVisual && !config.rotateRiderWithPogo) {
+                                const baseLeft = Number.parseFloat(playerElement.style.left) || 0;
+                                const leanRadians = tilt * Math.PI / 180;
+                                const compressedHeight = Math.max(0, config.height - compressionOffset);
+                                const handleFollowOffsetX = Math.sin(leanRadians) * compressedHeight;
+                                playerElement.style.left = `${baseLeft + handleFollowOffsetX * zoom}px`;
+                            }
+                            if (playerElement && config.rotateRiderWithPogo) {
+                                const playerLeft = Number.parseFloat(playerElement.style.left) || 0;
+                                const playerTop = Number.parseFloat(playerElement.style.top) || 0;
+                                playerElement.style.transformOrigin =
+                                    `${centerX - playerLeft}px ${screenY - playerTop}px`;
+                                playerElement.style.transform = `rotate(${tilt}deg)`;
+                            }
+                            if (playerElement && config.rotateRiderWithMount) {
+                                const playerLeft = Number.parseFloat(playerElement.style.left) || 0;
+                                const playerTop = Number.parseFloat(playerElement.style.top) || 0;
+                                playerElement.style.transformOrigin =
+                                    `${centerX - playerLeft}px ${screenY - playerTop}px`;
+                                playerElement.style.transform = `rotate(${tilt}deg)`;
+                            }
+                            if (playerElement && config.hatPendulum) {
+                                const playerLeft = Number.parseFloat(playerElement.style.left) || 0;
+                                const playerTop = Number.parseFloat(playerElement.style.top) || 0;
+                                const propellerCenterY = screenY - config.height * (1 - 0.1293) * zoom;
+                                playerElement.style.transformOrigin =
+                                    `${centerX - playerLeft}px ${propellerCenterY - playerTop}px`;
+                                playerElement.style.transform = `rotate(${hatSwingAngle}deg)`;
+                            }
+                            if (playerElement && config.cannon && state.phase === 'active') {
+                                const playerLeft = Number.parseFloat(playerElement.style.left) || 0;
+                                const playerTop = Number.parseFloat(playerElement.style.top) || 0;
+                                const barrelPivotX = centerX
+                                    + ((config.cannonRiderPivotX ?? 0.5) - 0.5) * config.width * zoom;
+                                const barrelPivotY = screenY
+                                    - config.height * (1 - (config.cannonRiderPivotY ?? 0.7231)) * zoom;
+                                playerElement.style.transformOrigin =
+                                    `${barrelPivotX - playerLeft}px ${barrelPivotY - playerTop}px`;
+                                playerElement.style.transform = `rotate(${state.cannonAngle}deg)`;
+                            }
+                            if (playerElement && config.rotateRiderWithBall) {
+                                const playerLeft = Number.parseFloat(playerElement.style.left) || 0;
+                                const playerTop = Number.parseFloat(playerElement.style.top) || 0;
+                                const ballCenterY = screenY - config.height * 0.5 * zoom;
+                                playerElement.style.transformOrigin =
+                                    `${centerX - playerLeft}px ${ballCenterY - playerTop}px`;
+                                playerElement.style.transform = `rotate(${state.ballRotation}deg)`;
+                            }
+                            if (playerElement && config.dangling) {
+                                const danglingTilt = speedRatio * 45 - Math.sin(state.elapsed * 2.25) * 18;
+                                playerElement.style.transformOrigin = '50% 48%';
+                                playerElement.style.transform = `rotate(${danglingTilt}deg)`;
+                            }
+                            mountBlock.style.transformOrigin = (config.pogoVisual || config.cannon) ? '50% 100%' : '';
+                            mountBlock.style.transform = config.pogoVisual
+                                ? `scaleY(${1 - state.pogoCompression * pogoCompressionAmount})`
+                                : (config.cannon ? `rotate(${state.cannonAngle}deg)` : '');
+                            visual.style.left = `${centerX}px`;
+                            visual.style.top = `${screenY}px`;
+                            visual.style.transform = `translate(-50%, -100%) rotate(${tilt}deg)`;
+                            if (usesHoverCarLayers) {
+                                hoverCarLayers.forEach((layer) => {
+                                    layer.style.left = `${centerX}px`;
+                                    layer.style.top = `${screenY}px`;
+                                    layer.style.transform = `translate(-50%, -100%) rotate(${tilt}deg) scaleX(${facingScale})`;
+                                });
+                                hoverCarGlow.style.left = `${centerX}px`;
+                                hoverCarGlow.style.top = `${screenY - config.height * 0.025 * zoom}px`;
+                                hoverCarGlow.style.transform = `translate(-50%, -50%) rotate(${tilt}deg)`;
+                            }
+                            if (config.bottomGlow) {
+                                hoverBoardGlow.style.left = `${centerX}px`;
+                                hoverBoardGlow.style.top = `${screenY - config.height * 0.015 * zoom}px`;
+                                hoverBoardGlow.style.transform = `translate(-50%, -50%) rotate(${tilt}deg)`;
+                            }
+                            if (activeMountArtLayers) {
+                                activeMountArtLayers.forEach((layer) => {
+                                    const isPogoBody = config.pogoVisual
+                                        && layer.classList.contains('pogo-stick-body');
+                                    const isCannonBarrel = config.cannon
+                                        && layer.classList.contains('cannon-barrel');
+                                    const isHelicopterHatBody = config.hatPendulum
+                                        && layer.classList.contains('helicopter-hat-body');
+                                    const isJumpingSkateboard = skateboardAirAnimationActive
+                                        && layer.classList.contains('skateboard-art');
+                                    const partCompressionOffset = isPogoBody ? compressionOffset * zoom : 0;
+                                    const partTilt = isJumpingSkateboard
+                                        ? skateboardJumpRotation
+                                        : ((config.cannon || config.hatPendulum) ? 0 : tilt);
+                                    const partFacingScale = (config.cannon || config.hatPendulum) ? 1 : facingScale;
+                                    layer.style.left = `${centerX}px`;
+                                    layer.style.top = `${screenY + partCompressionOffset}px`;
+                                    layer.style.transform = `translate(-50%, -100%) rotate(${partTilt}deg) scaleX(${partFacingScale})`;
+                                    if (isCannonBarrel) {
+                                        layer.firstElementChild.style.transform =
+                                            `translate(-50%, -50%) rotate(${state.cannonAngle}deg)`;
+                                    } else if (isHelicopterHatBody) {
+                                        layer.firstElementChild.style.transform =
+                                            `translate(-50%, -50%) rotate(${hatSwingAngle}deg)`;
+                                    }
+                                });
+                            }
+                        },
+
+                        ignoresPlatforms() {
+                            return state.phase === 'active' && Boolean(MODE_CONFIG[state.mode]?.ignoresPlatforms);
+                        },
+
+                        primaryAction(active) {
+                            const config = MODE_CONFIG[state.mode];
+                            if (state.phase !== 'active' || !config?.cannon) return false;
+                            if (active) {
+                                if (!state.cannonCharging) {
+                                    state.cannonCharging = true;
+                                    state.cannonCharge = 0;
+                                    state.cannonChargeDirection = 1;
+                                    state.cannonPointerId = 'touch-action';
+                                    focusGame();
+                                }
+                            } else if (state.cannonCharging) {
+                                launchCannon();
+                            }
+                            return true;
+                        },
+
+                        controlsGroundMomentum() {
+                            return state.phase === 'active' && !MODE_CONFIG[state.mode]?.nativeJetpack;
+                        },
+
+                        ownsRiderAnimation() {
+                            const config = MODE_CONFIG[state.mode];
+                            return state.phase === 'active'
+                                && Boolean(config?.skateboardPropulsion
+                                    || config?.loopAnimation
+                                    || config?.animation === 'idle'
+                                    || config?.animation === 'race-car'
+                                    || config?.animation === 'frozen-pose');
+                        },
+
+                        suppressesJumpAnimations() {
+                            return state.phase === 'active'
+                                && Boolean(MODE_CONFIG[state.mode]?.suppressJumpAnimations);
+                        },
+
+                        usesBouncePump() {
+                            return state.phase === 'active'
+                                && Boolean(MODE_CONFIG[state.mode]?.impactBounce);
+                        },
+
+                        areLeavesEnabled() {
+                            return state.leavesEnabled;
+                        },
+
+                        getDebugText() {
+                            if (state.phase === 'active' && MODE_CONFIG[state.mode]?.teleport) {
+                                return `teleport (${state.teleportRemaining.toFixed(1)}s)`;
+                            }
+                            return state.phase === 'default' ? 'Default' : `${state.mode} (${state.phase})`;
+                        }
+                    };
+                }
+            });
+        })();
+    </script>
+
+    <script type="module" src="gameCode.js"></script>
+    <script type="text/plain" id="legacy-blob-loader-disabled">
+        /*
+         * Keep mount code in this HTML while giving it safe access to the existing
+         * module-scoped player state. Every hook insertion is checked so an
+         * upstream gameCode.js change fails visibly instead of silently breaking.
+         */
+        const statusElement = document.getElementById('debug-info');
+        try {
+            const gameCodeUrl = new URL('./gameCode.js', window.location.href);
+            const response = await fetch(gameCodeUrl);
+            if (!response.ok) throw new Error(`Could not load gameCode.js (${response.status})`);
+            let source = await response.text();
+            source = source.replace(
+                /from\s+(['"])\.\/backgroundTiles\.js\1/,
+                `from ${JSON.stringify(new URL('./backgroundTiles.js', window.location.href).href)}`
+            );
+
+            const inject = (needle, replacement, label) => {
+                if (!source.includes(needle)) throw new Error(`Mount hook not found: ${label}`);
+                source = source.replace(needle, replacement);
+            };
+
+            inject(
+                "document.addEventListener('DOMContentLoaded', () => {",
+                'const __animeeStartGame = () => {',
+                'game startup'
+            );
+            inject(
+                '            function syncPlayerSkeletonScale() {',
+                `            const mountController = window.AnimeeMountModes?.create({
+                player,
+                getKeys: () => keys,
+                getJoystick: () => joystickState,
+                setIdleAnimation: () => setSpineAnimation(ANIM_IDLE, true),
+                setLoopAnimation: (animationName) => setSpineAnimation(animationName, true),
+                setFrozenAnimation: (animationName, frameTime) => {
+                    const animationState = spinePlayer?.animationState;
+                    const skeleton = spinePlayer?.skeleton;
+                    if (!animationState || !skeleton?.data?.findAnimation?.(animationName)) return;
+                    const targetTime = Math.max(0, Number(frameTime) || 0);
+                    const current = animationState.getCurrent?.(0);
+                    if (current?.animation?.name === animationName
+                        && current.timeScale === 0
+                        && Math.abs((current.trackTime || 0) - targetTime) < 0.0001) return;
+                    const entry = setLoggedAnimation(0, animationName, false, animationState);
+                    if (!entry) return;
+                    entry.trackTime = targetTime;
+                    entry.timeScale = 0;
+                    entry.alpha = 1;
+                    entry.mixDuration = 0;
+                    player.currentAnimation = animationName;
+                    animationState.apply?.(skeleton);
+                },
+                playAnimationOnce: (animationName, onComplete) => playSpineAnimationOnce(animationName, 0, onComplete),
+                stopJetpackVisibility: () => {
+                    const wasEnabled = jetpackState.enabled;
+                    jetpackState.enabled = false;
+                    jetpackState.thrusting = false;
+                    if (wasEnabled) playJetpackRemoveAnimation();
+                    else if (!jetpackState.removing) clearJetpackTrack();
+                    updateJetpackModeButton();
+                },
+                setJetpackEnabled: (enabled) => {
+                    const nextEnabled = Boolean(enabled);
+                    if (jetpackState.enabled === nextEnabled && (!jetpackState.thrusting || nextEnabled)) return;
+                    jetpackState.enabled = nextEnabled;
+                    if (!nextEnabled) {
+                        jetpackState.thrusting = false;
+                        clearJetpackTrack();
+                    } else if (jetpackState.removing) {
+                        clearJetpackTrack();
+                    }
+                    updateJetpackModeButton();
+                },
+                getZoom: () => zoomLevel,
+                setZoom: (value) => setZoom(value)
+            });
+
+            function syncPlayerSkeletonScale() {`,
+                'controller setup'
+            );
+            inject(
+                '                handleInput(dt);',
+                `                mountController?.beforeInput(dt);
+                handleInput(dt);
+                mountController?.afterInput(dt);`,
+                'input loop'
+            );
+            inject(
+                '                    if (player.onGround && !player.isSkidding && !player.isLandingAnimation) {',
+                '                    if (player.onGround && !player.isSkidding && !player.isLandingAnimation && !mountController?.controlsGroundMomentum?.()) {',
+                'mounted skid bypass'
+            );
+            inject(
+                '            function applyGroundAnimation() {',
+                `            function applyGroundAnimation() {
+                if (mountController?.ownsRiderAnimation?.()) return;`,
+                'mounted rider animation ownership'
+            );
+            inject(
+                '            function updateAirAnimation(prevVy) {',
+                `            function updateAirAnimation(prevVy) {
+                if (mountController?.ownsRiderAnimation?.()) return;`,
+                'mounted airborne animation ownership'
+            );
+            inject(
+                '                updatePlayer(dt); // physics + collisions are up-to-date here',
+                `                updatePlayer(dt); // physics + collisions are up-to-date here
+                mountController?.afterPhysics();`,
+                'physics loop'
+            );
+            inject(
+                '                for (const p of platforms) {',
+                '                if (!mountController?.ignoresPlatforms?.()) for (const p of platforms) {',
+                'platform collision bypass'
+            );
+            inject(
+                '                if (!player.onGround && platforms.length > 0) {',
+                '                if (!mountController?.ignoresPlatforms?.() && !player.onGround && platforms.length > 0) {',
+                'ground collision bypass'
+            );
+            inject(
+                '                if (slopeSlideState.active && player.onGround && !isEmotePlaying()) {',
+                '                if (slopeSlideState.active && player.onGround && !isEmotePlaying() && !mountController?.ownsRiderAnimation?.()) {',
+                'mounted slope animation bypass'
+            );
+            inject(
+                '                updateAmbientLeaves(dt);',
+                '                if (mountController?.areLeavesEnabled?.() ?? true) updateAmbientLeaves(dt);',
+                'leaf update toggle'
+            );
+            inject(
+                '                updateAllVfx(dt);',
+                `                mountController?.render(camera, zoomLevel);
+                updateAllVfx(dt);`,
+                'render loop'
+            );
+            inject(
+                '                drawAmbientLeafOverlay();',
+                '                if (mountController?.areLeavesEnabled?.() ?? true) drawAmbientLeafOverlay();',
+                'leaf draw toggle'
+            );
+            inject(
+                '                html += `Jetpack: ${jetpackState.enabled ? \'ON\' : \'OFF\'} Fuel:${fuelPercent}% Thrust:${jetpackState.thrusting}<br>`;',
+                `                html += \`Jetpack: \${jetpackState.enabled ? 'ON' : 'OFF'} Fuel:\${fuelPercent}% Thrust:\${jetpackState.thrusting}<br>\`;
+                html += \`Mount: \${mountController?.getDebugText?.() || 'Unavailable'}<br>\`;`,
+                'debug display'
+            );
+
+            const finalListenerClose = '        });';
+            const finalListenerIndex = source.lastIndexOf(finalListenerClose);
+            if (finalListenerIndex < 0) throw new Error('Mount hook not found: game startup close');
+            source = source.slice(0, finalListenerIndex)
+                + `        };
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', __animeeStartGame, { once: true });
+        } else {
+            __animeeStartGame();
+        }`
+                + source.slice(finalListenerIndex + finalListenerClose.length);
+
+            const moduleBlobUrl = URL.createObjectURL(new Blob([source], { type: 'text/javascript' }));
+            try {
+                await import(moduleBlobUrl);
+            } finally {
+                URL.revokeObjectURL(moduleBlobUrl);
+            }
+        } catch (error) {
+            console.error('Unable to start Animee mount-enabled game:', error);
+            if (statusElement) {
+                statusElement.style.display = 'block';
+                statusElement.textContent = `Unable to start game: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+
+</html>

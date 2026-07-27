@@ -1,0 +1,25 @@
+{ "skeleton": { "images": "G:/My Drive/Freelance Jobs 2016 Onwards/CHEEZLES/Ani-mee LOCAL simon/Animee Anims Other/MOUNTS/CANNON/images/" },
+"PhotoshopToSpine": { "scale": 1, "padding": 1, "trim": true },
+"bones": [
+	{ "name": "root" }
+],
+"slots": [
+	{ "name": "WHEELFAR", "bone": "root", "attachment": "WHEELFAR" },
+	{ "name": "BARREL", "bone": "root", "attachment": "BARREL" },
+	{ "name": "WHEELNEAR", "bone": "root", "attachment": "WHEELNEAR" }
+],
+"skins": {
+	"default": {
+		"WHEELFAR": {
+			"WHEELFAR": { "x": 399, "y": -999, "width": 566, "height": 588 }
+		},
+		"BARREL": {
+			"BARREL": { "x": 547, "y": -722, "width": 648, "height": 1042 }
+		},
+		"WHEELNEAR": {
+			"WHEELNEAR": { "x": 693.5, "y": -1019, "width": 581, "height": 602 }
+		}
+	}
+},
+"animations": { "animation": {} }
+}

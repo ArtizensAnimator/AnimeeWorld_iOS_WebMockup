@@ -1,0 +1,409 @@
+{
+  "version": 1,
+  "layout": "deep-zoom",
+  "tileSize": 512,
+  "overlap": 1,
+  "format": "png",
+  "source": {
+    "json": "AnimeWorld_Sketch05.json",
+    "imageDirectory": "images"
+  },
+  "layers": [
+    {
+      "id": "006 SKY",
+      "attachment": "006 SKY",
+      "key": "layer-000",
+      "source": {
+        "path": "images/006 SKY.png",
+        "sha256": "1aff7eabb22f675eaae12d86931775a3b1f2acf790a36ce43165dda32763288f",
+        "width": 17419,
+        "height": 10868,
+        "channels": 4,
+        "hasAlpha": true
+      },
+      "maxLevel": 15,
+      "minLevel": 9,
+      "urlTemplate": "layer-000_files/{level}/{column}_{row}.png",
+      "levels": [
+        {
+          "dziLevel": 15,
+          "scale": 1,
+          "width": 17419,
+          "height": 10868,
+          "columns": 35,
+          "rows": 22,
+          "tileCount": 770,
+          "directoryLevel": 6
+        },
+        {
+          "dziLevel": 14,
+          "scale": 0.5,
+          "width": 8710,
+          "height": 5434,
+          "columns": 18,
+          "rows": 11,
+          "tileCount": 198,
+          "directoryLevel": 5
+        },
+        {
+          "dziLevel": 13,
+          "scale": 0.25,
+          "width": 4355,
+          "height": 2717,
+          "columns": 9,
+          "rows": 6,
+          "tileCount": 54,
+          "directoryLevel": 4
+        },
+        {
+          "dziLevel": 12,
+          "scale": 0.125,
+          "width": 2178,
+          "height": 1359,
+          "columns": 5,
+          "rows": 3,
+          "tileCount": 15,
+          "directoryLevel": 3
+        },
+        {
+          "dziLevel": 11,
+          "scale": 0.0625,
+          "width": 1089,
+          "height": 680,
+          "columns": 3,
+          "rows": 2,
+          "tileCount": 6,
+          "directoryLevel": 2
+        },
+        {
+          "dziLevel": 10,
+          "scale": 0.03125,
+          "width": 545,
+          "height": 340,
+          "columns": 2,
+          "rows": 1,
+          "tileCount": 2,
+          "directoryLevel": 1
+        },
+        {
+          "dziLevel": 9,
+          "scale": 0.015625,
+          "width": 273,
+          "height": 170,
+          "columns": 1,
+          "rows": 1,
+          "tileCount": 1,
+          "directoryLevel": 0
+        }
+      ],
+      "tileCount": 1046
+    },
+    {
+      "id": "005 SKYWHALES",
+      "attachment": "005 SKYWHALES",
+      "key": "layer-001",
+      "source": {
+        "path": "images/005 SKYWHALES.png",
+        "sha256": "5a017a67ac8c579bc033634d2337ece4823d21893503fa5121d98cda1773a825",
+        "width": 6218,
+        "height": 5713,
+        "channels": 4,
+        "hasAlpha": true
+      },
+      "maxLevel": 13,
+      "minLevel": 9,
+      "urlTemplate": "layer-001_files/{level}/{column}_{row}.png",
+      "levels": [
+        {
+          "dziLevel": 13,
+          "scale": 1,
+          "width": 6218,
+          "height": 5713,
+          "columns": 13,
+          "rows": 12,
+          "tileCount": 156,
+          "directoryLevel": 4
+        },
+        {
+          "dziLevel": 12,
+          "scale": 0.5,
+          "width": 3109,
+          "height": 2857,
+          "columns": 7,
+          "rows": 6,
+          "tileCount": 42,
+          "directoryLevel": 3
+        },
+        {
+          "dziLevel": 11,
+          "scale": 0.25,
+          "width": 1555,
+          "height": 1429,
+          "columns": 4,
+          "rows": 3,
+          "tileCount": 12,
+          "directoryLevel": 2
+        },
+        {
+          "dziLevel": 10,
+          "scale": 0.125,
+          "width": 778,
+          "height": 715,
+          "columns": 2,
+          "rows": 2,
+          "tileCount": 4,
+          "directoryLevel": 1
+        },
+        {
+          "dziLevel": 9,
+          "scale": 0.0625,
+          "width": 389,
+          "height": 358,
+          "columns": 1,
+          "rows": 1,
+          "tileCount": 1,
+          "directoryLevel": 0
+        }
+      ],
+      "tileCount": 215
+    },
+    {
+      "id": "004 Mountains etc",
+      "attachment": "004 Mountains etc",
+      "key": "layer-002",
+      "source": {
+        "path": "images/004 Mountains etc.png",
+        "sha256": "c4c8a47e8fba8f0fbfadaf3e6d6308bab7a02a44c6beb8a61d4c8c0c7096a80d",
+        "width": 15065,
+        "height": 5251,
+        "channels": 4,
+        "hasAlpha": true
+      },
+      "maxLevel": 14,
+      "minLevel": 9,
+      "urlTemplate": "layer-002_files/{level}/{column}_{row}.png",
+      "levels": [
+        {
+          "dziLevel": 14,
+          "scale": 1,
+          "width": 15065,
+          "height": 5251,
+          "columns": 30,
+          "rows": 11,
+          "tileCount": 330,
+          "directoryLevel": 5
+        },
+        {
+          "dziLevel": 13,
+          "scale": 0.5,
+          "width": 7533,
+          "height": 2626,
+          "columns": 15,
+          "rows": 6,
+          "tileCount": 90,
+          "directoryLevel": 4
+        },
+        {
+          "dziLevel": 12,
+          "scale": 0.25,
+          "width": 3767,
+          "height": 1313,
+          "columns": 8,
+          "rows": 3,
+          "tileCount": 24,
+          "directoryLevel": 3
+        },
+        {
+          "dziLevel": 11,
+          "scale": 0.125,
+          "width": 1884,
+          "height": 657,
+          "columns": 4,
+          "rows": 2,
+          "tileCount": 8,
+          "directoryLevel": 2
+        },
+        {
+          "dziLevel": 10,
+          "scale": 0.0625,
+          "width": 942,
+          "height": 329,
+          "columns": 2,
+          "rows": 1,
+          "tileCount": 2,
+          "directoryLevel": 1
+        },
+        {
+          "dziLevel": 9,
+          "scale": 0.03125,
+          "width": 471,
+          "height": 165,
+          "columns": 1,
+          "rows": 1,
+          "tileCount": 1,
+          "directoryLevel": 0
+        }
+      ],
+      "tileCount": 455
+    },
+    {
+      "id": "003 Clouds",
+      "attachment": "003 Clouds",
+      "key": "layer-003",
+      "source": {
+        "path": "images/003 Clouds.png",
+        "sha256": "eb6c9f7805af3519c6ee741ce84a01bf232e60c22d1496360966e075045a08d2",
+        "width": 11123,
+        "height": 4736,
+        "channels": 4,
+        "hasAlpha": true
+      },
+      "maxLevel": 14,
+      "minLevel": 9,
+      "urlTemplate": "layer-003_files/{level}/{column}_{row}.png",
+      "levels": [
+        {
+          "dziLevel": 14,
+          "scale": 1,
+          "width": 11123,
+          "height": 4736,
+          "columns": 22,
+          "rows": 10,
+          "tileCount": 220,
+          "directoryLevel": 5
+        },
+        {
+          "dziLevel": 13,
+          "scale": 0.5,
+          "width": 5562,
+          "height": 2368,
+          "columns": 11,
+          "rows": 5,
+          "tileCount": 55,
+          "directoryLevel": 4
+        },
+        {
+          "dziLevel": 12,
+          "scale": 0.25,
+          "width": 2781,
+          "height": 1184,
+          "columns": 6,
+          "rows": 3,
+          "tileCount": 18,
+          "directoryLevel": 3
+        },
+        {
+          "dziLevel": 11,
+          "scale": 0.125,
+          "width": 1391,
+          "height": 592,
+          "columns": 3,
+          "rows": 2,
+          "tileCount": 6,
+          "directoryLevel": 2
+        },
+        {
+          "dziLevel": 10,
+          "scale": 0.0625,
+          "width": 696,
+          "height": 296,
+          "columns": 2,
+          "rows": 1,
+          "tileCount": 2,
+          "directoryLevel": 1
+        },
+        {
+          "dziLevel": 9,
+          "scale": 0.03125,
+          "width": 348,
+          "height": 148,
+          "columns": 1,
+          "rows": 1,
+          "tileCount": 1,
+          "directoryLevel": 0
+        }
+      ],
+      "tileCount": 302
+    },
+    {
+      "id": "002 GAME AREA",
+      "attachment": "002 GAME AREA",
+      "key": "layer-004",
+      "source": {
+        "path": "images/002 GAME AREA.png",
+        "sha256": "43b8e60ca35bac69c0217111d557b11ef034a255b2a07adcad8fe09aaaf9cb9d",
+        "width": 14406,
+        "height": 9127,
+        "channels": 4,
+        "hasAlpha": true
+      },
+      "maxLevel": 14,
+      "minLevel": 9,
+      "urlTemplate": "layer-004_files/{level}/{column}_{row}.png",
+      "levels": [
+        {
+          "dziLevel": 14,
+          "scale": 1,
+          "width": 14406,
+          "height": 9127,
+          "columns": 29,
+          "rows": 18,
+          "tileCount": 522,
+          "directoryLevel": 5
+        },
+        {
+          "dziLevel": 13,
+          "scale": 0.5,
+          "width": 7203,
+          "height": 4564,
+          "columns": 15,
+          "rows": 9,
+          "tileCount": 135,
+          "directoryLevel": 4
+        },
+        {
+          "dziLevel": 12,
+          "scale": 0.25,
+          "width": 3602,
+          "height": 2282,
+          "columns": 8,
+          "rows": 5,
+          "tileCount": 40,
+          "directoryLevel": 3
+        },
+        {
+          "dziLevel": 11,
+          "scale": 0.125,
+          "width": 1801,
+          "height": 1141,
+          "columns": 4,
+          "rows": 3,
+          "tileCount": 12,
+          "directoryLevel": 2
+        },
+        {
+          "dziLevel": 10,
+          "scale": 0.0625,
+          "width": 901,
+          "height": 571,
+          "columns": 2,
+          "rows": 2,
+          "tileCount": 4,
+          "directoryLevel": 1
+        },
+        {
+          "dziLevel": 9,
+          "scale": 0.03125,
+          "width": 451,
+          "height": 286,
+          "columns": 1,
+          "rows": 1,
+          "tileCount": 1,
+          "directoryLevel": 0
+        }
+      ],
+      "tileCount": 714
+    }
+  ],
+  "totalTiles": 2732
+}

@@ -1,0 +1,33 @@
+{ "skeleton": { "images": "D:/TEMP CHIRU/Chiru GIT builds Testing/img_assets/0000 BIG BACKGROUND STUFF/images/" },
+"PhotoshopToSpine": { "scale": 1, "padding": 1, "trim": true },
+"bones": [
+	{ "name": "root" }
+],
+"slots": [
+	{ "name": "006 SKY", "bone": "root", "attachment": "006 SKY" },
+	{ "name": "005 SKYWHALES", "bone": "root", "attachment": "005 SKYWHALES" },
+	{ "name": "004 Mountains etc", "bone": "root", "attachment": "004 Mountains etc" },
+	{ "name": "003 Clouds", "bone": "root", "attachment": "003 Clouds" },
+	{ "name": "002 GAME AREA", "bone": "root", "attachment": "002 GAME AREA" }
+],
+"skins": {
+	"default": {
+		"006 SKY": {
+			"006 SKY": { "x": 7488.5, "y": -4691, "width": 17419, "height": 10868 }
+		},
+		"005 SKYWHALES": {
+			"005 SKYWHALES": { "x": 5638, "y": -4622.5, "width": 6218, "height": 5713 }
+		},
+		"004 Mountains etc": {
+			"004 Mountains etc": { "x": 7206.5, "y": -7499.5, "width": 15065, "height": 5251 }
+		},
+		"003 Clouds": {
+			"003 Clouds": { "x": 7120.5, "y": -7757, "width": 11123, "height": 4736 }
+		},
+		"002 GAME AREA": {
+			"002 GAME AREA": { "x": 7906, "y": -5272.5, "width": 14406, "height": 9127 }
+		}
+	}
+},
+"animations": { "animation": {} }
+}

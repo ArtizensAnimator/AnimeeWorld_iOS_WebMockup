@@ -1,0 +1,21 @@
+{ "skeleton": { "images": "G:/My Drive/Freelance Jobs 2016 Onwards/CHEEZLES/Ani-mee LOCAL simon/Animee Anims Other/MOUNTS/HoverBoard/images/" },
+"PhotoshopToSpine": { "scale": 1, "padding": 1, "trim": true },
+"bones": [
+	{ "name": "root" }
+],
+"slots": [
+	{ "name": "Underlay", "bone": "root", "attachment": "Underlay" },
+	{ "name": "OVERLAY", "bone": "root", "attachment": "OVERLAY" }
+],
+"skins": {
+	"default": {
+		"Underlay": {
+			"Underlay": { "x": 242, "y": -96, "width": 432, "height": 142 }
+		},
+		"OVERLAY": {
+			"OVERLAY": { "x": 242, "y": -117.5, "width": 432, "height": 99 }
+		}
+	}
+},
+"animations": { "animation": {} }
+}

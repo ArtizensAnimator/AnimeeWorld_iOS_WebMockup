@@ -1,0 +1,41 @@
+BALLOON.png
+size:1434,2074
+filter:Linear,Linear
+pma:true
+Balloon 0
+bounds:921,1028,229,872
+offsets:1,1,231,875
+Balloon 0 copy
+bounds:1047,319,263,707
+offsets:1,1,266,709
+Balloon 0 copy 2
+bounds:2,2,220,627
+offsets:1,1,223,630
+rotate:90
+Balloon 0 copy 3
+bounds:2,609,417,689
+offsets:1,1,419,691
+rotate:90
+Balloon 0 copy 4
+bounds:2,224,383,724
+offsets:1,1,385,726
+rotate:90
+Balloon 0 copy 5
+bounds:245,1126,394,946
+offsets:1,1,396,948
+Balloon 0 copy 6
+bounds:2,1028,241,1044
+offsets:1,1,244,1046
+Balloon 0 copy 7
+bounds:1152,1028,233,715
+offsets:1,1,236,717
+Balloon 0 copy 8
+bounds:728,83,234,704
+offsets:2,1,238,706
+rotate:90
+Balloon 0 copy 9
+bounds:641,1028,278,854
+offsets:1,1,280,857
+Stand
+bounds:728,329,317,697
+offsets:2,1,320,700

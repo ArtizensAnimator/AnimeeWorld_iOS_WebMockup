@@ -1,0 +1,19 @@
+Spine DOOR_v001.png
+size:1968,1088
+filter:Linear,Linear
+pma:true
+Background
+bounds:530,2,717,1084
+offsets:1,1,720,1086
+Door
+bounds:2,100,526,986
+Door FRAME
+bounds:1249,2,717,1084
+offsets:1,1,720,1086
+
+Spine DOOR_v001_2.png
+size:1028,1540
+filter:Linear,Linear
+pma:true
+Gen door raw
+bounds:2,2,1024,1536

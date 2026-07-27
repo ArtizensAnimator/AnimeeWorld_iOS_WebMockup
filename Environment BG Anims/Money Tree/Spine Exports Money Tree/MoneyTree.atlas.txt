@@ -1,0 +1,26 @@
+MoneyTree.png
+size:1157,858
+filter:Linear,Linear
+pma:true
+Coin 3rt Left
+bounds:1068,468,47,87
+Coin 3rt Right
+bounds:1068,379,47,87
+CoinBushOL Left
+bounds:1068,705,87,74
+offsets:0,0,87,75
+CoinBushOL Right
+bounds:1068,781,87,75
+CoinBushOL darker
+bounds:1068,631,85,72
+offsets:1,1,87,75
+CoinBushOL light
+bounds:1068,557,85,72
+offsets:1,1,87,75
+CoinFront
+bounds:1068,290,47,87
+Conside
+bounds:1117,467,25,88
+MoneyTree Sketch
+bounds:2,2,1064,854
+offsets:106,174,1288,1086

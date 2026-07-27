@@ -1,0 +1,210 @@
+{
+"skeleton": {
+	"hash": "Wy4DlIuIpVE",
+	"spine": "4.2.43",
+	"x": -379,
+	"y": 0.08,
+	"width": 720,
+	"height": 1086,
+	"images": "./images/",
+	"audio": "./audio"
+},
+"bones": [
+	{ "name": "root" },
+	{ "name": "Door BONE", "parent": "root", "length": 535.4, "x": -280, "y": 497.57 },
+	{
+		"name": "Edge for scale",
+		"parent": "Door BONE",
+		"length": 95.54,
+		"rotation": 90,
+		"x": 522.77,
+		"y": 0.43,
+		"inherit": "noScale"
+	}
+],
+"slots": [
+	{ "name": "Background", "bone": "root", "attachment": "Background" },
+	{ "name": "Door FRAME", "bone": "root", "attachment": "Door FRAME" },
+	{ "name": "clipping", "bone": "root", "attachment": "clipping" },
+	{ "name": "Door", "bone": "root", "attachment": "Door" }
+],
+"skins": [
+	{
+		"name": "default",
+		"attachments": {
+			"Background": {
+				"Background": { "x": -19, "y": 543.08, "width": 720, "height": 1086 }
+			},
+			"clipping": {
+				"clipping": {
+					"type": "clipping",
+					"end": "Door",
+					"vertexCount": 4,
+					"vertices": [ -278.86, 1295.24, -284.81, -370.07, 960.75, -576.91, 952.4, 1501.11 ],
+					"color": "ce3a3aff"
+				}
+			},
+			"Door": {
+				"Door": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0, 0.67859, 0.50449, 0.91925, 0.49758 ],
+					"triangles": [ 3, 4, 2, 0, 5, 3, 5, 4, 3, 1, 2, 4, 4, 5, 0, 1, 4, 0 ],
+					"vertices": [ 1, 1, 524, -494.49, 1, 1, 1, -2, -494.49, 1, 1, 1, -2, 491.51, 1, 2, 1, 524, 491.51, 0.50857, 2, 491.08, -1.24, 0.49143, 1, 1, 354.94, -5.91, 1, 2, 1, 481.53, 0.9, 0.54825, 2, 0.47, 41.24, 0.45175 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6 ],
+					"width": 526,
+					"height": 986
+				}
+			},
+			"Door FRAME": {
+				"Door FRAME": { "x": -19, "y": 543.08, "width": 720, "height": 1086 }
+			}
+		}
+	}
+],
+"animations": {
+	"door_idle": {
+		"bones": {
+			"Door BONE": {
+				"scale": [
+					{ "curve": "stepped" },
+					{ "time": 0.7667 }
+				]
+			},
+			"Edge for scale": {
+				"scale": [
+					{}
+				]
+			}
+		}
+	},
+	"door_open": {
+		"bones": {
+			"Door BONE": {
+				"scale": [
+					{
+						"curve": [ 0.206, 1, 0.16, 0.734, 0.121, 1, 0.222, 1 ]
+					},
+					{ "time": 0.3333, "x": 0.734, "curve": "stepped" },
+					{
+						"time": 0.6333,
+						"x": 0.734,
+						"curve": [ 0.865, 0.734, 0.689, 0.998, 0.733, 1, 0.833, 1 ]
+					},
+					{ "time": 0.9333, "curve": "stepped" },
+					{ "time": 1 }
+				]
+			},
+			"Edge for scale": {
+				"scale": [
+					{
+						"curve": [ 0.111, 1, 0.222, 1.246, 0.111, 1, 0.222, 1 ]
+					},
+					{ "time": 0.3333, "x": 1.246, "curve": "stepped" },
+					{
+						"time": 0.6333,
+						"x": 1.246,
+						"curve": [ 0.733, 1.246, 0.833, 1, 0.733, 1, 0.833, 1 ]
+					},
+					{ "time": 0.9333, "curve": "stepped" },
+					{ "time": 1 }
+				]
+			}
+		}
+	},
+	"door_open2_begin": {
+		"bones": {
+			"Door BONE": {
+				"translatex": [
+					{
+						"curve": [ 0.171, -15.28, 0.148, -387.23 ]
+					},
+					{ "time": 0.3333, "value": -387.23 }
+				],
+				"translatey": [
+					{ "curve": "stepped" },
+					{ "time": 0.3333 }
+				],
+				"scale": [
+					{
+						"curve": [ 0.206, 1, 0.16, 0.734, 0.121, 1, 0.222, 1 ]
+					},
+					{ "time": 0.3333, "x": 0.734 }
+				]
+			},
+			"Edge for scale": {
+				"scale": [
+					{}
+				]
+			}
+		}
+	},
+	"door_open2_cycle": {
+		"bones": {
+			"Door BONE": {
+				"translatex": [
+					{ "value": -387.23, "curve": "stepped" },
+					{ "time": 0.5667, "value": -387.23 }
+				],
+				"translatey": [
+					{ "curve": "stepped" },
+					{ "time": 0.5667 }
+				],
+				"scale": [
+					{ "x": 0.734, "curve": "stepped" },
+					{ "time": 0.5667, "x": 0.734 }
+				]
+			},
+			"Edge for scale": {
+				"scale": [
+					{ "x": 1.246, "curve": "stepped" },
+					{ "time": 0.5667, "x": 1.246 }
+				]
+			}
+		}
+	},
+	"door_open2_end": {
+		"bones": {
+			"Door BONE": {
+				"translatex": [
+					{
+						"value": -387.23,
+						"curve": [ 0.102, -387.23, 0.156, -6.2 ]
+					},
+					{
+						"time": 0.1667,
+						"curve": [ 0.178, 0, 0.189, -12.03 ]
+					},
+					{
+						"time": 0.2,
+						"value": -12.03,
+						"curve": [ 0.211, -12.03, 0.222, -4.01 ]
+					},
+					{ "time": 0.2333 }
+				],
+				"translatey": [
+					{ "curve": "stepped" },
+					{ "time": 0.1667, "curve": "stepped" },
+					{ "time": 0.2, "curve": "stepped" },
+					{ "time": 0.2333 }
+				],
+				"scale": [
+					{
+						"x": 0.734,
+						"curve": [ 0.203, 0.734, -0.046, 0.998, 0.087, 1, 0.079, 1 ]
+					},
+					{ "time": 0.1667, "curve": "stepped" },
+					{ "time": 0.2333 }
+				]
+			},
+			"Edge for scale": {
+				"scale": [
+					{ "curve": "stepped" },
+					{ "time": 0.1667, "curve": "stepped" },
+					{ "time": 0.2333 }
+				]
+			}
+		}
+	}
+}
+}

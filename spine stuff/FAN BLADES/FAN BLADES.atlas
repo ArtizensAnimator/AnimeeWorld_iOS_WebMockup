@@ -1,0 +1,29 @@
+FAN BLADES.png
+size:157,141
+filter:Linear,Linear
+pma:true
+001
+bounds:114,90,8,9
+offsets:2,1,11,11
+BladeRND
+bounds:85,15,33,44
+BladeRND_L
+bounds:2,101,111,38
+offsets:1,1,113,40
+BladeRND_R
+bounds:2,61,110,38
+offsets:1,1,112,40
+BladeSQR
+bounds:115,102,40,37
+BladeSQR_L
+bounds:2,35,81,24
+offsets:1,2,83,27
+BladeSQR_R
+bounds:2,9,80,24
+offsets:1,1,82,31
+Layer 1
+bounds:96,2,9,11
+offsets:1,1,11,13
+Layer 2
+bounds:84,4,10,9
+offsets:1,1,12,11

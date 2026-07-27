@@ -1,0 +1,33 @@
+Multiple layers for the "default" skin in the "Coin 3rt" slot have the same name "Coin 3rt":
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin01/Coin 3rt
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin01 copy 4/Coin 3rt
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin01 copy 2/Coin 3rt
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin01 copy 3/Coin 3rt
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin01 copy/Coin 3rt
+Rename or use the [ignore] tag for these layers.
+---
+Multiple layers for the "default" skin in the "CoinBush" slot have the same name "CoinBush":
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin01/CoinBush
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin01 copy 4/CoinBush
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin01 copy 2/CoinBush
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin01 copy 3/CoinBush
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin01 copy/CoinBush
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin02/CoinBush
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin02 copy/CoinBush
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin03 copy/CoinBush
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin03/CoinBush
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin03 copy 3/CoinBush
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin03 copy 2/CoinBush
+Rename or use the [ignore] tag for these layers.
+---
+Multiple layers for the "default" skin in the "Conside" slot have the same name "Conside":
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin02/Conside
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin02 copy/Conside
+Rename or use the [ignore] tag for these layers.
+---
+Multiple layers for the "default" skin in the "Layer 3" slot have the same name "Layer 3":
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin03 copy/Layer 3
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin03/Layer 3
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin03 copy 3/Layer 3
+Money in Tre/Money in Tree/Tree Coin 10 copy 6/Coin03 copy 2/Layer 3
+Rename or use the [ignore] tag for these layers.

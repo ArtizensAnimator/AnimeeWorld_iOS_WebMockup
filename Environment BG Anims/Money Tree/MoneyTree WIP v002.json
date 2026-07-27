@@ -1,0 +1,53 @@
+{ "skeleton": { "images": "G:/My Drive/Freelance Jobs 2016 Onwards/CHEEZLES/Ani-mee LOCAL simon/Animee Anims Other/Money Tree/images/" },
+"PhotoshopToSpine": { "scale": 1, "padding": 1, "trim": true },
+"bones": [
+	{ "name": "root" }
+],
+"slots": [
+	{ "name": "BODY", "bone": "root", "attachment": "BODY" },
+	{ "name": "Coin 3rt Right", "bone": "root", "attachment": "Coin 3rt Right" },
+	{ "name": "CoinBushOL Right", "bone": "root", "attachment": "CoinBushOL Right" },
+	{ "name": "Coin 3rt Left", "bone": "root", "attachment": "Coin 3rt Left" },
+	{ "name": "CoinBushOL light", "bone": "root", "attachment": "CoinBushOL light" },
+	{ "name": "CoinBushOL darker", "bone": "root", "attachment": "CoinBushOL darker" },
+	{ "name": "Conside", "bone": "root", "attachment": "Conside" },
+	{ "name": "CoinBushOL dark", "bone": "root", "attachment": "CoinBushOL dark" },
+	{ "name": "CoinFront", "bone": "root", "attachment": "CoinFront" },
+	{ "name": "CoinBushOL Left", "bone": "root", "attachment": "CoinBushOL Left" }
+],
+"skins": {
+	"default": {
+		"BODY": {
+			"BODY": { "x": 752, "y": -720, "width": 1156, "height": 876 }
+		},
+		"Coin 3rt Right": {
+			"Coin 3rt Right": { "x": 648.5, "y": -702.5, "width": 47, "height": 87 }
+		},
+		"CoinBushOL Right": {
+			"CoinBushOL Right": { "x": 648.5, "y": -660.5, "width": 87, "height": 75 }
+		},
+		"Coin 3rt Left": {
+			"Coin 3rt Left": { "x": 452.5, "y": -782.5, "width": 47, "height": 87 }
+		},
+		"CoinBushOL light": {
+			"CoinBushOL light": { "x": 1136.5, "y": -819.5, "width": 87, "height": 75 }
+		},
+		"CoinBushOL darker": {
+			"CoinBushOL darker": { "x": 440.5, "y": -907.5, "width": 87, "height": 75 }
+		},
+		"Conside": {
+			"Conside": { "x": 766.5, "y": -819, "width": 25, "height": 88 }
+		},
+		"CoinBushOL dark": {
+			"CoinBushOL dark": { "x": 759.5, "y": -789.5, "width": 87, "height": 75 }
+		},
+		"CoinFront": {
+			"CoinFront": { "x": 359.5, "y": -859.5, "width": 47, "height": 87 }
+		},
+		"CoinBushOL Left": {
+			"CoinBushOL Left": { "x": 352.5, "y": -820.5, "width": 87, "height": 75 }
+		}
+	}
+},
+"animations": { "animation": {} }
+}

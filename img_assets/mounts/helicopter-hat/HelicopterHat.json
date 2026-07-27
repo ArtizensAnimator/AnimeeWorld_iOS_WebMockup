@@ -1,0 +1,21 @@
+{ "skeleton": { "images": "G:/My Drive/Freelance Jobs 2016 Onwards/CHEEZLES/Ani-mee LOCAL simon/Animee Anims Other/MOUNTS/images/" },
+"PhotoshopToSpine": { "scale": 1, "padding": 1, "trim": true },
+"bones": [
+	{ "name": "root" }
+],
+"slots": [
+	{ "name": "Propeller", "bone": "root", "attachment": "Propeller" },
+	{ "name": "HAT", "bone": "root", "attachment": "HAT" }
+],
+"skins": {
+	"default": {
+		"Propeller": {
+			"Propeller": { "x": 408, "y": -73, "width": 802, "height": 112 }
+		},
+		"HAT": {
+			"HAT": { "x": 408.5, "y": -239.5, "width": 711, "height": 421 }
+		}
+	}
+},
+"animations": { "animation": {} }
+}
