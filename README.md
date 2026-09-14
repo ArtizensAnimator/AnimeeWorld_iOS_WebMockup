@@ -48,10 +48,12 @@ Do not edit `ios/App/App/public` directly. Capacitor regenerates it from this `w
 Install Git and a current Node.js LTS release. In PowerShell:
 
 ```powershell
-git clone https://github.com/ArtizensAnimator/AnimeeWorld_iOS_WebMockup.git
+git clone --depth 1 https://github.com/ArtizensAnimator/AnimeeWorld_iOS_WebMockup.git
 cd AnimeeWorld_iOS_WebMockup
 npm run dev
 ```
+
+The shallow clone downloads the current mockup without also downloading superseded asset versions from older Git history. It can still pull, commit, and push normally.
 
 Open <http://127.0.0.1:8080/>.
 
