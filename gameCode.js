@@ -7026,6 +7026,7 @@ import { createBeaverNpcController } from './beaverNpc.js';
             let DRIVINGSPEED = 0;
 
             const ANIM_IDLE = "GameAnims/game_idle_breathing_loop";
+            const ANIM_HARVEST = "GameAnims/game_harvest";
             const ANIM_EDGE_UNBALANCED = "GameAnims/game_unbalancedLoop";
             let EDGE_PROXIMITY_THRESHOLD = 2; // Distance in px from a platform edge before triggering the unbalanced loop
             const WIND_LEFT_ANIMATION = "GameAnims/game_wind_right";
@@ -7636,14 +7637,15 @@ import { createBeaverNpcController } from './beaverNpc.js';
                 playEmoteAnimation(animationName);
             }
 
-            function playEmoteAnimation(animationName) {
+            function playEmoteAnimation(animationName, loopCount = EMOTE_LOOP_COUNT) {
                 if (!spinePlayer?.animationState || !spinePlayer?.skeleton?.data) return;
                 if (!spinePlayer.skeleton.data.findAnimation(animationName)) {
                     console.warn(`[EmoteMenu] Animation not found: ${animationName}`);
                     return;
                 }
+                const requestedLoopCount = Math.max(1, Math.floor(loopCount));
                 if (emotePlayback.active && emotePlayback.animationName === animationName) {
-                    emotePlayback.loopsRemaining = EMOTE_LOOP_COUNT;
+                    emotePlayback.loopsRemaining = requestedLoopCount;
                     return;
                 }
                 if (emotePlayback.active) {
@@ -7667,7 +7669,7 @@ import { createBeaverNpcController } from './beaverNpc.js';
                 entry.mixTime = 0;
                 emotePlayback.active = true;
                 emotePlayback.animationName = animationName;
-                emotePlayback.loopsRemaining = EMOTE_LOOP_COUNT;
+                emotePlayback.loopsRemaining = requestedLoopCount;
                 emotePlayback.entry = entry;
                 emotePlayback.trackIndex = trackIndex;
                 const previousComplete = entry.listener?.complete;
@@ -7682,6 +7684,10 @@ import { createBeaverNpcController } from './beaverNpc.js';
                         finishEmotePlayback();
                     }
                 };
+            }
+
+            function playHarvestAnimation() {
+                playEmoteAnimation(ANIM_HARVEST, 1);
             }
 
             function finishEmotePlayback() {
@@ -10588,6 +10594,11 @@ import { createBeaverNpcController } from './beaverNpc.js';
                     if (!e.repeat && swordModeState.active) {
                         e.preventDefault();
                         playSwordAttack();
+                    }
+                } else if (key === 'h') {
+                    if (!e.repeat) {
+                        e.preventDefault();
+                        playHarvestAnimation();
                     }
                 }
             });
