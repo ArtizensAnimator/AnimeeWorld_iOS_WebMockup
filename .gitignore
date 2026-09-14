@@ -1,6 +1,21 @@
+# Operating-system and editor files
 .DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*~
+
+# Local dependencies, caches, and generated output
 node_modules/
 .build/
+dist/
+coverage/
 DerivedData/
 *.xcuserstate
 
+# High-resolution authoring sources. The browser uses the generated tile
+# pyramid under `tiles/`, not these original full-size images.
+img_assets/0000 BIG BACKGROUND STUFF/images/
+
+# Obsolete copy of the previous background tile pyramid.
+img_assets/0000 BIG BACKGROUND STUFF/tiles old/

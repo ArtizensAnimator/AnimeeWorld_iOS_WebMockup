@@ -1,4 +1,5 @@
 import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTiles.js';
+import { createBeaverNpcController } from './beaverNpc.js';
 
    const __animeeStartGame = () => {
             if (!spine || !spine.SpinePlayer) {
@@ -338,7 +339,10 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
             let landingVfxController = null;
             let skidVfxController = null;
             let swordHitVfxController = null;
-            let coinCollectVfxController = null;
+    let coinCollectVfxController = null;
+    let beaverNpcController = null;
+    const PLAYER_SPAWN_OFFSET_X = -4000;
+    const beaverConversationState = { active: false };
 
             const gameWrapper = document.getElementById('game-wrapper');
             const gameBoardElement = document.getElementById('game-board');
@@ -513,8 +517,8 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
             let backgroundLoadPromise = Promise.resolve();
             let backgroundLoadResolvers = [];
             let backgroundLoadAbortController = null;
-            let backgroundVisible = true;
-            const BACKGROUND_SCENE_SCALE = 1.3;
+            let backgroundVisible = false;
+            const BACKGROUND_SCENE_SCALE = 1.6;
             const backgroundTileRenderer = new BackgroundTileRenderer(IS_NATIVE_IOS ? {
                 loadConcurrency: 1,
                 prefetchMargin: 0,
@@ -1220,7 +1224,7 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
                 if (playerSpawnPositionApplied) return;
                 if (!player) return;
                 if (WORLD_WIDTH <= 0 || WORLD_HEIGHT <= 0) return;
-                const centerX = Math.max(0, (WORLD_WIDTH - player.width) / 2);
+                const centerX = Math.max(0, (WORLD_WIDTH - player.width) / 2 + PLAYER_SPAWN_OFFSET_X);
                 const centerY = Math.max(0, (WORLD_HEIGHT - player.height) / 2);
                 player.x = centerX;
                 player.y = centerY;
@@ -1483,6 +1487,7 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
                 rebuildDoorsFromPlacements();
                 layoutBalloonsInWorld();
                 clampPlacedSpinePropsToWorld();
+                beaverNpcController?.layout();
                 clampTextBoxesToWorld();
                 resetAmbientLeaves();
                 jetpackState.fuel = JETPACK_MAX_FUEL;
@@ -4667,11 +4672,115 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
                     + doors.length
                     + balloons.length
                     + placedSpineProps.length
+                    + (beaverNpcController?.getManagedPlayerCount?.() || 0)
                     + (chatBotController ? 1 : 0);
             }
 
             function hasManagedSpinePlayerCapacity(additionalPlayers = 1) {
                 return getManagedSpinePlayerCount() + Math.max(0, additionalPlayers) <= MAX_MANAGED_SPINE_PLAYERS;
+            }
+
+            function initializeBeaverNpc() {
+                if (beaverNpcController) return;
+                const sharedBeaverOptions = {
+                    spine,
+                    gameBoardElement,
+                    hasSpineCapacity: () => hasManagedSpinePlayerCapacity(),
+                    getPlayerState: () => ({
+                        x: player.x + player.width * 0.5,
+                        y: player.y + player.height
+                    }),
+                    hasActivePlayerInput: () => (
+                        joystickState.active
+                        || ['left', 'right', 'jump', 'run', 'descend', 'chat'].some(isActionActive)
+                    ),
+                    onConversationChange: (active, detail = {}) => {
+                        beaverConversationState.active = Boolean(active);
+                        playerContainerElement.dataset.beaverConversationActive = String(beaverConversationState.active);
+                        if (active) {
+                            player.vx = 0;
+                            player.isMoving = false;
+                            player.isRunning = false;
+                            player.previousMoveType = 'idle';
+                            player.lastMoveType = 'idle';
+                            const playerCenterX = player.x + player.width * 0.5;
+                            player.facingRight = Number(detail.beaverX) < playerCenterX;
+                            playerContainerElement.dataset.beaverConversationFacing = player.facingRight ? 'left' : 'right';
+                            syncPlayerSkeletonScale();
+                        } else {
+                            clearTalkOverlay();
+                        }
+                    },
+                    getSceneState: () => ({
+                        worldWidth: WORLD_WIDTH,
+                        worldHeight: WORLD_HEIGHT,
+                        floorHeight: FLOOR_HEIGHT,
+                        camera,
+                        zoomLevel,
+                        spineCanvasRenderZoom: SPINE_CANVAS_RENDER_ZOOM
+                    })
+                };
+                const beaverControllers = [
+                    createBeaverNpcController({
+                        ...sharedBeaverOptions,
+                        debugName: 'trunk',
+                        spawnProgress: 0.08,
+                        initialPhase: 'walk-carry',
+                        ownsScenery: true,
+                        logSlotOffset: 0,
+                        movementMode: 'run'
+                    }),
+                    createBeaverNpcController({
+                        ...sharedBeaverOptions,
+                        debugName: 'middle',
+                        spawnProgress: 0.5,
+                        initialPhase: 'walk-empty',
+                        ownsScenery: false,
+                        logSlotOffset: 4,
+                        movementMode: 'walk'
+                    }),
+                    createBeaverNpcController({
+                        ...sharedBeaverOptions,
+                        debugName: 'pile',
+                        spawnProgress: 0.92,
+                        initialPhase: 'idle-pile',
+                        ownsScenery: false,
+                        logSlotOffset: 8
+                    })
+                ];
+                const getBeaverGroupSnapshot = () => {
+                    const beavers = beaverControllers.map(controller => controller.getSnapshot());
+                    return {
+                        ready: beavers.every(snapshot => snapshot.ready),
+                        phase: beavers.map(snapshot => snapshot.phase).join(', '),
+                        deliveredCount: beavers.reduce((total, snapshot) => total + snapshot.deliveredCount, 0),
+                        beavers
+                    };
+                };
+                beaverNpcController = Object.freeze({
+                    create: () => {
+                        let created = false;
+                        beaverControllers.forEach((controller) => {
+                            created = controller.create() || created;
+                        });
+                        return created;
+                    },
+                    dispose: () => beaverControllers.forEach(controller => controller.dispose()),
+                    draw: context => beaverControllers.forEach(controller => controller.draw(context)),
+                    getManagedPlayerCount: () => beaverControllers.reduce(
+                        (total, controller) => total + controller.getManagedPlayerCount(),
+                        0
+                    ),
+                    getSnapshot: getBeaverGroupSnapshot,
+                    layout: options => beaverControllers.forEach(controller => controller.layout(options)),
+                    resize: () => beaverControllers.forEach(controller => controller.resize()),
+                    update: dt => beaverControllers.forEach(controller => controller.update(dt))
+                });
+                Object.defineProperty(window, '__beaverNpcDebug', {
+                    configurable: true,
+                    value: Object.freeze({ getSnapshot: getBeaverGroupSnapshot })
+                });
+                beaverNpcController.create();
             }
 
             function getSpinePlayerCanvases(container) {
@@ -6946,6 +7055,7 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
             const TALK_TRACK_INDEX = 4;
             const EMOTE_TRACK_INDEX = 5;
             const SWORD_TRACK_INDEX = 6;
+            const TALK_LIP_SYNC_TRACK_INDEX = 7;
             const SWORD_UNSHEATH_ANIMATION = "GameAnims/game_weapon_unsheath";
             const SWORD_HOLD_ANIMATION = "GameAnims/game_weapon_hold";
             const SWORD_SHEATH_ANIMATION = "GameAnims/game_weapon_sheath";
@@ -6957,6 +7067,11 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
             const SWORD_HITBOX_FLASH_TIME = 0.1;
             const SWORD_HITBOX_FREEZE_DURATION = 0.3;
             const TALK_ANIMATION_NAME = "GameAnims/game_talkLoop_neutral";
+            const TALK_LIP_SYNC_ANIMATION_NAMES = Object.freeze([
+                "GameAnims/game_talkLoop_LipSyncOnly",
+                "GameAnims/game_talkLoop_LipSyncOnly_sad"
+            ]);
+            const TALK_LIP_SYNC_SWITCH_DELAY = Object.freeze({ min: 2.4, max: 5.2 });
             const BLINK_TRACK_INDEX = 15;
             const BLINK_ANIMATION_NAME = "GameAnims/blink";
             const JETPACK_TRACK_INDEX = 16;
@@ -7209,6 +7324,26 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
                 skeleton.scaleY = PLAYER_SKELETON_VISUAL_SCALE;
             }
 
+            function getPlayerRootWorldPosition() {
+                const root = spinePlayer?.skeleton?.getRootBone?.();
+                const spineCamera = spinePlayer?.sceneRenderer?.camera;
+                if (!root || !spineCamera) return null;
+                const rootX = Number(root.worldX ?? root.appliedPose?.worldX);
+                const rootY = Number(root.worldY ?? root.appliedPose?.worldY);
+                const visibleWidth = Number(spineCamera.viewportWidth) * Number(spineCamera.zoom);
+                const visibleHeight = Number(spineCamera.viewportHeight) * Number(spineCamera.zoom);
+                const cameraX = Number(spineCamera.position?.x);
+                const cameraY = Number(spineCamera.position?.y);
+                if (![rootX, rootY, visibleWidth, visibleHeight, cameraX, cameraY].every(Number.isFinite)
+                    || visibleWidth <= 0 || visibleHeight <= 0) return null;
+                const normalizedX = (rootX - (cameraX - visibleWidth * 0.5)) / visibleWidth;
+                const normalizedY = 1 - ((rootY - (cameraY - visibleHeight * 0.5)) / visibleHeight);
+                return {
+                    x: playerContainerWorldBounds.left + normalizedX * playerContainerWorldBounds.width,
+                    y: playerContainerWorldBounds.top + normalizedY * playerContainerWorldBounds.height
+                };
+            }
+
             let playerSpawnPositionApplied = false;
             let playerTiltAngleDeg = 0;
             const slopeSlideState = { active: false, targetTiltDeg: 0 };
@@ -7217,6 +7352,9 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
             let currentLandingOverlayEntry = null;
             let currentStopOverlayEntry = null;
             let currentTalkEntry = null;
+            let currentTalkLipSyncEntry = null;
+            let talkLipSyncVariantIndex = 0;
+            let talkLipSyncSwitchTimer = 0;
             let currentBlinkEntry = null;
             let pendingFacingRight = null;
             let pendingFacingFlipTimer = 0;
@@ -7346,6 +7484,7 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
                 doors.forEach((door) => door?.spinePlayer?.resize?.());
                 balloons.forEach((targetBalloon) => targetBalloon?.spinePlayer?.resize?.());
                 placedSpineProps.forEach((prop) => prop?.spinePlayer?.resize?.());
+                beaverNpcController?.resize?.();
                 updateTextBoxContainers();
                 updateButterflySpawnContainers();
                 if (cameraTrackingEnabled) centerCameraOnPlayer();
@@ -7688,6 +7827,7 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
                         }
                         if (typeof spinePlayer.resize === 'function') spinePlayer.resize();
                         setSpineAnimation(ANIM_IDLE, true);
+                        initializeBeaverNpc();
                         if (!IS_NATIVE_IOS) {
                             createBalloons();
                         }
@@ -8422,11 +8562,70 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
                 };
             }
 
+            function clearTalkLipSyncOverlay() {
+                if (spinePlayer?.animationState) {
+                    clearTrackLogged(TALK_LIP_SYNC_TRACK_INDEX, spinePlayer.animationState);
+                }
+                currentTalkLipSyncEntry = null;
+                talkLipSyncVariantIndex = 0;
+                talkLipSyncSwitchTimer = 0;
+                if (playerContainerElement) {
+                    playerContainerElement.dataset.talkLipSyncAnimation = '';
+                    playerContainerElement.dataset.talkLipSyncTrack = '';
+                }
+            }
+
+            function updateTalkLipSyncOverlay(dt) {
+                const animationState = spinePlayer?.animationState;
+                const skeletonData = spinePlayer?.skeleton?.data;
+                if (!currentTalkEntry || !animationState || !skeletonData) {
+                    if (currentTalkLipSyncEntry || animationState?.getCurrent?.(TALK_LIP_SYNC_TRACK_INDEX)) {
+                        clearTalkLipSyncOverlay();
+                    }
+                    return;
+                }
+
+                talkLipSyncSwitchTimer = Math.max(0, talkLipSyncSwitchTimer - Math.max(0, Number(dt) || 0));
+                const activeEntry = animationState.getCurrent(TALK_LIP_SYNC_TRACK_INDEX);
+                const needsFirstVariant = !currentTalkLipSyncEntry || activeEntry !== currentTalkLipSyncEntry;
+                if (needsFirstVariant) talkLipSyncVariantIndex = 0;
+                else if (talkLipSyncSwitchTimer <= 0) {
+                    talkLipSyncVariantIndex = (talkLipSyncVariantIndex + 1) % TALK_LIP_SYNC_ANIMATION_NAMES.length;
+                } else {
+                    return;
+                }
+
+                let animationName = TALK_LIP_SYNC_ANIMATION_NAMES[talkLipSyncVariantIndex];
+                if (!skeletonData.findAnimation(animationName)) {
+                    animationName = TALK_LIP_SYNC_ANIMATION_NAMES.find(name => skeletonData.findAnimation(name)) || '';
+                }
+                if (!animationName) {
+                    clearTalkLipSyncOverlay();
+                    return;
+                }
+
+                const entry = setLoggedAnimation(TALK_LIP_SYNC_TRACK_INDEX, animationName, true, animationState);
+                if (!entry) return;
+                currentTalkLipSyncEntry = entry;
+                entry.alpha = 1;
+                entry.additive = false;
+                entry.mixDuration = 0.08;
+                entry.mixTime = 0;
+                talkLipSyncSwitchTimer = randomFloat(
+                    TALK_LIP_SYNC_SWITCH_DELAY.min,
+                    TALK_LIP_SYNC_SWITCH_DELAY.max
+                );
+                playerContainerElement.dataset.talkLipSyncAnimation = animationName;
+                playerContainerElement.dataset.talkLipSyncTrack = String(TALK_LIP_SYNC_TRACK_INDEX);
+            }
+
             function clearTalkOverlay() {
                 if (spinePlayer?.animationState) {
                     clearTrackLogged(TALK_TRACK_INDEX, spinePlayer.animationState);
                 }
                 currentTalkEntry = null;
+                clearTalkLipSyncOverlay();
+                if (playerContainerElement) playerContainerElement.dataset.talkOverlayAnimation = '';
                 speechBubbleController?.handleTalkState(false);
             }
 
@@ -8449,6 +8648,30 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
                 if (!animationState || !skeletonData) {
                     currentTalkEntry = null;
                     speechBubbleController?.handleTalkState(false);
+                    return;
+                }
+
+                if (beaverConversationState.active) {
+                    const activeEntry = animationState.getCurrent(TALK_TRACK_INDEX);
+                    if (!currentTalkEntry || activeEntry !== currentTalkEntry) {
+                        if (!skeletonData.findAnimation(TALK_ANIMATION_NAME)) {
+                            currentTalkEntry = null;
+                            speechBubbleController?.handleTalkState(false);
+                            return;
+                        }
+                        const entry = setLoggedAnimation(TALK_TRACK_INDEX, TALK_ANIMATION_NAME, true, animationState);
+                        if (!entry) {
+                            currentTalkEntry = null;
+                            speechBubbleController?.handleTalkState(false);
+                            return;
+                        }
+                        currentTalkEntry = entry;
+                        entry.alpha = 1;
+                        entry.mixDuration = 0;
+                        entry.mixTime = 0;
+                    }
+                    playerContainerElement.dataset.talkOverlayAnimation = TALK_ANIMATION_NAME;
+                    speechBubbleController?.handleTalkState(true);
                     return;
                 }
 
@@ -9134,6 +9357,12 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
                     clearStopOverlay(); jetpackState.thrusting = false;
                     return;
                 }
+                if (beaverConversationState.active) {
+                    player.vx = 0; player.isRunning = false; player.jumpHeld = false; player.isJumping = false; player.jumpHoldTime = 0;
+                    player.isMoving = false; player.previousMoveType = 'idle'; player.lastMoveType = 'idle';
+                    clearStopOverlay(); jetpackState.thrusting = false;
+                    return;
+                }
                 if (player.sitState !== 'none') {
                     const leftPressed = isActionActive('left'), rightPressed = isActionActive('right');
                     const jumpPressed = isActionActive('jump');
@@ -9557,6 +9786,8 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
                 playerContainerElement.style.top = `${screenTop}px`;
                 playerContainerElement.style.width = `${screenWidth}px`;
                 playerContainerElement.style.height = `${screenHeight}px`;
+                playerContainerElement.dataset.worldX = String(playerCenterX);
+                playerContainerElement.dataset.facing = player.facingRight ? 'left' : 'right';
                 updateSpineRenderSurface(playerContainerElement, containerWidth, containerHeight);
                 if (playerTiltAngleDeg) {
                     const pivotX = (containerWidth * 0.5) * zoomLevel;
@@ -9575,6 +9806,14 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
                 playerContainerWorldBounds.top = containerWorldTop;
                 playerContainerWorldBounds.width = containerWidth;
                 playerContainerWorldBounds.height = containerHeight;
+                const playerRootWorldPosition = getPlayerRootWorldPosition();
+                const playerGroundY = player.y + player.height;
+                playerContainerElement.dataset.rootWorldY = playerRootWorldPosition
+                    ? String(playerRootWorldPosition.y)
+                    : '';
+                playerContainerElement.dataset.rootGroundOffsetY = playerRootWorldPosition
+                    ? String(playerRootWorldPosition.y - playerGroundY)
+                    : '';
                 if (doorRushState.active) {
                     applyDoorMaskClip(doorRushState.maskSide);
                 } else {
@@ -9584,7 +9823,7 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
 
                 //the speech bubble scale offsets
                 const zoomScale = PLAYER_VISUAL_HEIGHT > 0 ? (screenHeight / PLAYER_VISUAL_HEIGHT) : 1;
-                const speechOffsetY = -1000 * zoomScale;
+                const speechOffsetY = -1200 * zoomScale;
                 const speechTranslateY = 6 * zoomScale;
                 playerContainerElement.style.setProperty('--speech-offset-y', `${speechOffsetY}px`);
                 playerContainerElement.style.setProperty('--speech-translate-y', `${speechTranslateY}px`);
@@ -9701,12 +9940,14 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
 
 
                 updateTalkOverlay();
+                updateTalkLipSyncOverlay(dt);
                 updateBlink(dt);
                 updateSwordMixing(dt);
                 updateCamera(dt);
                 updatePlayerDimensionsFromSkeleton(); //Call this
                 updateBalloons(dt);
                 updatePlacedSpineProps(dt);
+                beaverNpcController?.update(dt);
                 updateButterflySpawns(dt);
                 if (mountController?.areLeavesEnabled?.() ?? true) updateAmbientLeaves(dt);
                 updateCoins(dt);
@@ -9849,6 +10090,7 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
                 drawChairs(context);
                 drawCoins(context);
                 drawCoinPileCollectibles(context);
+                beaverNpcController?.draw(context);
                 drawDoorsDebug(context);
                 drawBalloonsDebug(context);
                 drawPlacedSpinePropsDebug(context);
@@ -9925,6 +10167,8 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
                 const fuelPercent = JETPACK_MAX_FUEL > 0 ? Math.round((jetpackState.fuel / JETPACK_MAX_FUEL) * 100) : 0;
                 html += `Jetpack: ${jetpackState.enabled ? 'ON' : 'OFF'} Fuel:${fuelPercent}% Thrust:${jetpackState.thrusting}<br>`;
                 html += `Mount: ${mountController?.getDebugText?.() || 'Unavailable'}<br>`;
+                const beaverDebug = beaverNpcController?.getSnapshot?.();
+                html += `Beaver: ${beaverDebug?.phase || 'loading'} Logs:${beaverDebug?.deliveredCount || 0}<br>`;
                 balloons.forEach((targetBalloon) => {
                     if (!targetBalloon.ready) return;
                     const hitPoint = getBalloonHitBoneWorldPosition(targetBalloon);
@@ -10040,7 +10284,7 @@ import { BackgroundTileRenderer, loadTiledBackgroundScene } from './backgroundTi
                 if (y < window.innerHeight * JOYSTICK_ACTIVATION_MIN_Y) return false;
                 if (x < wrapperRect.left || x > wrapperRect.right || y < wrapperRect.top || y > wrapperRect.bottom) return false;
                 const element = document.elementFromPoint(x, y);
-                return !(element && element.closest('#ui-controls'));
+                return !(element && element.closest('#ui-controls, .beaver-npc-container'));
             }
 
             function handleJoystickTouchStart(event) { if (touchCameraGestureActive || joystickState.active || buildModeEnabled) return; for (let touch of event.changedTouches) if (pointEligibleForJoystick(touch.clientX, touch.clientY)) { startJoystick(touch.clientX, touch.clientY, touch.identifier); event.preventDefault(); return; } }

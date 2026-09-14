@@ -115,12 +115,10 @@ export async function loadTiledBackgroundScene(sceneDef, options = {}) {
         if (!Number.isFinite(centerX) || !Number.isFinite(centerY)) {
             throw new Error(`Background layer "${slot.name}" has invalid placement metadata.`);
         }
-        if (width !== tiledLayer.sourceWidth || height !== tiledLayer.sourceHeight) {
-            throw new Error(
-                `Background layer "${slot.name}" metadata is ${width}x${height}, `
-                + `but its tile manifest is ${tiledLayer.sourceWidth}x${tiledLayer.sourceHeight}.`,
-            );
-        }
+        // The layout JSON describes the layer's world-space size, while the tile
+        // source may be exported at a higher resolution. The renderer maps the
+        // source pixels into these layout dimensions, so the two sizes need not
+        // match.
         const parallax = sceneDef.parallaxByLayer?.[slot.name] ?? 1;
         const zIndex = Number(sceneDef.zIndexByLayer?.[slot.name]);
         rawLayers.push({

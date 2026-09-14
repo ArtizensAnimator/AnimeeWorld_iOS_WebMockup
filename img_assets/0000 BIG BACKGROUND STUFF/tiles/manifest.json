@@ -15,41 +15,51 @@
       "key": "layer-000",
       "source": {
         "path": "images/006 SKY.png",
-        "sha256": "1aff7eabb22f675eaae12d86931775a3b1f2acf790a36ce43165dda32763288f",
-        "width": 17419,
-        "height": 10868,
+        "sha256": "58dd0be42ddb890e0b1994fda93a95e6927233aac27c7b60c3e6d14582982d73",
+        "width": 34077,
+        "height": 21262,
         "channels": 4,
         "hasAlpha": true
       },
-      "maxLevel": 15,
+      "maxLevel": 16,
       "minLevel": 9,
       "urlTemplate": "layer-000_files/{level}/{column}_{row}.png",
       "levels": [
         {
-          "dziLevel": 15,
+          "dziLevel": 16,
           "scale": 1,
-          "width": 17419,
-          "height": 10868,
-          "columns": 35,
-          "rows": 22,
-          "tileCount": 770,
+          "width": 34077,
+          "height": 21262,
+          "columns": 67,
+          "rows": 42,
+          "tileCount": 2814,
+          "directoryLevel": 7
+        },
+        {
+          "dziLevel": 15,
+          "scale": 0.5,
+          "width": 17039,
+          "height": 10631,
+          "columns": 34,
+          "rows": 21,
+          "tileCount": 714,
           "directoryLevel": 6
         },
         {
           "dziLevel": 14,
-          "scale": 0.5,
-          "width": 8710,
-          "height": 5434,
-          "columns": 18,
+          "scale": 0.25,
+          "width": 8520,
+          "height": 5316,
+          "columns": 17,
           "rows": 11,
-          "tileCount": 198,
+          "tileCount": 187,
           "directoryLevel": 5
         },
         {
           "dziLevel": 13,
-          "scale": 0.25,
-          "width": 4355,
-          "height": 2717,
+          "scale": 0.125,
+          "width": 4260,
+          "height": 2658,
           "columns": 9,
           "rows": 6,
           "tileCount": 54,
@@ -57,9 +67,9 @@
         },
         {
           "dziLevel": 12,
-          "scale": 0.125,
-          "width": 2178,
-          "height": 1359,
+          "scale": 0.0625,
+          "width": 2130,
+          "height": 1329,
           "columns": 5,
           "rows": 3,
           "tileCount": 15,
@@ -67,9 +77,9 @@
         },
         {
           "dziLevel": 11,
-          "scale": 0.0625,
-          "width": 1089,
-          "height": 680,
+          "scale": 0.03125,
+          "width": 1065,
+          "height": 665,
           "columns": 3,
           "rows": 2,
           "tileCount": 6,
@@ -77,9 +87,177 @@
         },
         {
           "dziLevel": 10,
+          "scale": 0.015625,
+          "width": 533,
+          "height": 333,
+          "columns": 2,
+          "rows": 1,
+          "tileCount": 2,
+          "directoryLevel": 1
+        },
+        {
+          "dziLevel": 9,
+          "scale": 0.0078125,
+          "width": 267,
+          "height": 167,
+          "columns": 1,
+          "rows": 1,
+          "tileCount": 1,
+          "directoryLevel": 0
+        }
+      ],
+      "tileCount": 3793
+    },
+    {
+      "id": "005 SKYWHALES",
+      "attachment": "005 SKYWHALES",
+      "key": "layer-001",
+      "source": {
+        "path": "images/005 SKYWHALES.png",
+        "sha256": "4cce102eb9b608186685a83851f6b5c78e75771a97ee5c4645ed92307307e92f",
+        "width": 8457,
+        "height": 7770,
+        "channels": 4,
+        "hasAlpha": true
+      },
+      "maxLevel": 14,
+      "minLevel": 9,
+      "urlTemplate": "layer-001_files/{level}/{column}_{row}.png",
+      "levels": [
+        {
+          "dziLevel": 14,
+          "scale": 1,
+          "width": 8457,
+          "height": 7770,
+          "columns": 17,
+          "rows": 16,
+          "tileCount": 272,
+          "directoryLevel": 5
+        },
+        {
+          "dziLevel": 13,
+          "scale": 0.5,
+          "width": 4229,
+          "height": 3885,
+          "columns": 9,
+          "rows": 8,
+          "tileCount": 72,
+          "directoryLevel": 4
+        },
+        {
+          "dziLevel": 12,
+          "scale": 0.25,
+          "width": 2115,
+          "height": 1943,
+          "columns": 5,
+          "rows": 4,
+          "tileCount": 20,
+          "directoryLevel": 3
+        },
+        {
+          "dziLevel": 11,
+          "scale": 0.125,
+          "width": 1058,
+          "height": 972,
+          "columns": 3,
+          "rows": 2,
+          "tileCount": 6,
+          "directoryLevel": 2
+        },
+        {
+          "dziLevel": 10,
+          "scale": 0.0625,
+          "width": 529,
+          "height": 486,
+          "columns": 2,
+          "rows": 1,
+          "tileCount": 2,
+          "directoryLevel": 1
+        },
+        {
+          "dziLevel": 9,
           "scale": 0.03125,
-          "width": 545,
-          "height": 340,
+          "width": 265,
+          "height": 243,
+          "columns": 1,
+          "rows": 1,
+          "tileCount": 1,
+          "directoryLevel": 0
+        }
+      ],
+      "tileCount": 373
+    },
+    {
+      "id": "004 Mountains etc",
+      "attachment": "004 Mountains etc",
+      "key": "layer-002",
+      "source": {
+        "path": "images/004 Mountains etc.png",
+        "sha256": "a58680f3d9e8536ba8cad629c7c18111e5f7648332b834af51202ff2ae46a9fa",
+        "width": 20489,
+        "height": 7141,
+        "channels": 4,
+        "hasAlpha": true
+      },
+      "maxLevel": 15,
+      "minLevel": 9,
+      "urlTemplate": "layer-002_files/{level}/{column}_{row}.png",
+      "levels": [
+        {
+          "dziLevel": 15,
+          "scale": 1,
+          "width": 20489,
+          "height": 7141,
+          "columns": 41,
+          "rows": 14,
+          "tileCount": 574,
+          "directoryLevel": 6
+        },
+        {
+          "dziLevel": 14,
+          "scale": 0.5,
+          "width": 10245,
+          "height": 3571,
+          "columns": 21,
+          "rows": 7,
+          "tileCount": 147,
+          "directoryLevel": 5
+        },
+        {
+          "dziLevel": 13,
+          "scale": 0.25,
+          "width": 5123,
+          "height": 1786,
+          "columns": 11,
+          "rows": 4,
+          "tileCount": 44,
+          "directoryLevel": 4
+        },
+        {
+          "dziLevel": 12,
+          "scale": 0.125,
+          "width": 2562,
+          "height": 893,
+          "columns": 6,
+          "rows": 2,
+          "tileCount": 12,
+          "directoryLevel": 3
+        },
+        {
+          "dziLevel": 11,
+          "scale": 0.0625,
+          "width": 1281,
+          "height": 447,
+          "columns": 3,
+          "rows": 1,
+          "tileCount": 3,
+          "directoryLevel": 2
+        },
+        {
+          "dziLevel": 10,
+          "scale": 0.03125,
+          "width": 641,
+          "height": 224,
           "columns": 2,
           "rows": 1,
           "tileCount": 2,
@@ -88,163 +266,15 @@
         {
           "dziLevel": 9,
           "scale": 0.015625,
-          "width": 273,
-          "height": 170,
+          "width": 321,
+          "height": 112,
           "columns": 1,
           "rows": 1,
           "tileCount": 1,
           "directoryLevel": 0
         }
       ],
-      "tileCount": 1046
-    },
-    {
-      "id": "005 SKYWHALES",
-      "attachment": "005 SKYWHALES",
-      "key": "layer-001",
-      "source": {
-        "path": "images/005 SKYWHALES.png",
-        "sha256": "5a017a67ac8c579bc033634d2337ece4823d21893503fa5121d98cda1773a825",
-        "width": 6218,
-        "height": 5713,
-        "channels": 4,
-        "hasAlpha": true
-      },
-      "maxLevel": 13,
-      "minLevel": 9,
-      "urlTemplate": "layer-001_files/{level}/{column}_{row}.png",
-      "levels": [
-        {
-          "dziLevel": 13,
-          "scale": 1,
-          "width": 6218,
-          "height": 5713,
-          "columns": 13,
-          "rows": 12,
-          "tileCount": 156,
-          "directoryLevel": 4
-        },
-        {
-          "dziLevel": 12,
-          "scale": 0.5,
-          "width": 3109,
-          "height": 2857,
-          "columns": 7,
-          "rows": 6,
-          "tileCount": 42,
-          "directoryLevel": 3
-        },
-        {
-          "dziLevel": 11,
-          "scale": 0.25,
-          "width": 1555,
-          "height": 1429,
-          "columns": 4,
-          "rows": 3,
-          "tileCount": 12,
-          "directoryLevel": 2
-        },
-        {
-          "dziLevel": 10,
-          "scale": 0.125,
-          "width": 778,
-          "height": 715,
-          "columns": 2,
-          "rows": 2,
-          "tileCount": 4,
-          "directoryLevel": 1
-        },
-        {
-          "dziLevel": 9,
-          "scale": 0.0625,
-          "width": 389,
-          "height": 358,
-          "columns": 1,
-          "rows": 1,
-          "tileCount": 1,
-          "directoryLevel": 0
-        }
-      ],
-      "tileCount": 215
-    },
-    {
-      "id": "004 Mountains etc",
-      "attachment": "004 Mountains etc",
-      "key": "layer-002",
-      "source": {
-        "path": "images/004 Mountains etc.png",
-        "sha256": "c4c8a47e8fba8f0fbfadaf3e6d6308bab7a02a44c6beb8a61d4c8c0c7096a80d",
-        "width": 15065,
-        "height": 5251,
-        "channels": 4,
-        "hasAlpha": true
-      },
-      "maxLevel": 14,
-      "minLevel": 9,
-      "urlTemplate": "layer-002_files/{level}/{column}_{row}.png",
-      "levels": [
-        {
-          "dziLevel": 14,
-          "scale": 1,
-          "width": 15065,
-          "height": 5251,
-          "columns": 30,
-          "rows": 11,
-          "tileCount": 330,
-          "directoryLevel": 5
-        },
-        {
-          "dziLevel": 13,
-          "scale": 0.5,
-          "width": 7533,
-          "height": 2626,
-          "columns": 15,
-          "rows": 6,
-          "tileCount": 90,
-          "directoryLevel": 4
-        },
-        {
-          "dziLevel": 12,
-          "scale": 0.25,
-          "width": 3767,
-          "height": 1313,
-          "columns": 8,
-          "rows": 3,
-          "tileCount": 24,
-          "directoryLevel": 3
-        },
-        {
-          "dziLevel": 11,
-          "scale": 0.125,
-          "width": 1884,
-          "height": 657,
-          "columns": 4,
-          "rows": 2,
-          "tileCount": 8,
-          "directoryLevel": 2
-        },
-        {
-          "dziLevel": 10,
-          "scale": 0.0625,
-          "width": 942,
-          "height": 329,
-          "columns": 2,
-          "rows": 1,
-          "tileCount": 2,
-          "directoryLevel": 1
-        },
-        {
-          "dziLevel": 9,
-          "scale": 0.03125,
-          "width": 471,
-          "height": 165,
-          "columns": 1,
-          "rows": 1,
-          "tileCount": 1,
-          "directoryLevel": 0
-        }
-      ],
-      "tileCount": 455
+      "tileCount": 783
     },
     {
       "id": "003 Clouds",
@@ -252,9 +282,9 @@
       "key": "layer-003",
       "source": {
         "path": "images/003 Clouds.png",
-        "sha256": "eb6c9f7805af3519c6ee741ce84a01bf232e60c22d1496360966e075045a08d2",
-        "width": 11123,
-        "height": 4736,
+        "sha256": "84990a683e558bba35b91db803206b36b9e4eefb579a631ef2591f622ff097db",
+        "width": 15128,
+        "height": 6441,
         "channels": 4,
         "hasAlpha": true
       },
@@ -265,48 +295,48 @@
         {
           "dziLevel": 14,
           "scale": 1,
-          "width": 11123,
-          "height": 4736,
-          "columns": 22,
-          "rows": 10,
-          "tileCount": 220,
+          "width": 15128,
+          "height": 6441,
+          "columns": 30,
+          "rows": 13,
+          "tileCount": 390,
           "directoryLevel": 5
         },
         {
           "dziLevel": 13,
           "scale": 0.5,
-          "width": 5562,
-          "height": 2368,
-          "columns": 11,
-          "rows": 5,
-          "tileCount": 55,
+          "width": 7564,
+          "height": 3221,
+          "columns": 15,
+          "rows": 7,
+          "tileCount": 105,
           "directoryLevel": 4
         },
         {
           "dziLevel": 12,
           "scale": 0.25,
-          "width": 2781,
-          "height": 1184,
-          "columns": 6,
-          "rows": 3,
-          "tileCount": 18,
+          "width": 3782,
+          "height": 1611,
+          "columns": 8,
+          "rows": 4,
+          "tileCount": 32,
           "directoryLevel": 3
         },
         {
           "dziLevel": 11,
           "scale": 0.125,
-          "width": 1391,
-          "height": 592,
-          "columns": 3,
+          "width": 1891,
+          "height": 806,
+          "columns": 4,
           "rows": 2,
-          "tileCount": 6,
+          "tileCount": 8,
           "directoryLevel": 2
         },
         {
           "dziLevel": 10,
           "scale": 0.0625,
-          "width": 696,
-          "height": 296,
+          "width": 946,
+          "height": 403,
           "columns": 2,
           "rows": 1,
           "tileCount": 2,
@@ -315,15 +345,15 @@
         {
           "dziLevel": 9,
           "scale": 0.03125,
-          "width": 348,
-          "height": 148,
+          "width": 473,
+          "height": 202,
           "columns": 1,
           "rows": 1,
           "tileCount": 1,
           "directoryLevel": 0
         }
       ],
-      "tileCount": 302
+      "tileCount": 538
     },
     {
       "id": "002 GAME AREA",
@@ -331,51 +361,61 @@
       "key": "layer-004",
       "source": {
         "path": "images/002 GAME AREA.png",
-        "sha256": "43b8e60ca35bac69c0217111d557b11ef034a255b2a07adcad8fe09aaaf9cb9d",
-        "width": 14406,
-        "height": 9127,
+        "sha256": "e7546b396d20010cbe28f81e4f6d00c768946b5d31f43d4653deddd089cda80a",
+        "width": 28452,
+        "height": 17805,
         "channels": 4,
         "hasAlpha": true
       },
-      "maxLevel": 14,
+      "maxLevel": 15,
       "minLevel": 9,
       "urlTemplate": "layer-004_files/{level}/{column}_{row}.png",
       "levels": [
         {
-          "dziLevel": 14,
+          "dziLevel": 15,
           "scale": 1,
-          "width": 14406,
-          "height": 9127,
-          "columns": 29,
+          "width": 28452,
+          "height": 17805,
+          "columns": 56,
+          "rows": 35,
+          "tileCount": 1960,
+          "directoryLevel": 6
+        },
+        {
+          "dziLevel": 14,
+          "scale": 0.5,
+          "width": 14226,
+          "height": 8903,
+          "columns": 28,
           "rows": 18,
-          "tileCount": 522,
+          "tileCount": 504,
           "directoryLevel": 5
         },
         {
           "dziLevel": 13,
-          "scale": 0.5,
-          "width": 7203,
-          "height": 4564,
-          "columns": 15,
+          "scale": 0.25,
+          "width": 7113,
+          "height": 4452,
+          "columns": 14,
           "rows": 9,
-          "tileCount": 135,
+          "tileCount": 126,
           "directoryLevel": 4
         },
         {
           "dziLevel": 12,
-          "scale": 0.25,
-          "width": 3602,
-          "height": 2282,
-          "columns": 8,
+          "scale": 0.125,
+          "width": 3557,
+          "height": 2226,
+          "columns": 7,
           "rows": 5,
-          "tileCount": 40,
+          "tileCount": 35,
           "directoryLevel": 3
         },
         {
           "dziLevel": 11,
-          "scale": 0.125,
-          "width": 1801,
-          "height": 1141,
+          "scale": 0.0625,
+          "width": 1779,
+          "height": 1113,
           "columns": 4,
           "rows": 3,
           "tileCount": 12,
@@ -383,9 +423,9 @@
         },
         {
           "dziLevel": 10,
-          "scale": 0.0625,
-          "width": 901,
-          "height": 571,
+          "scale": 0.03125,
+          "width": 890,
+          "height": 557,
           "columns": 2,
           "rows": 2,
           "tileCount": 4,
@@ -393,17 +433,17 @@
         },
         {
           "dziLevel": 9,
-          "scale": 0.03125,
-          "width": 451,
-          "height": 286,
+          "scale": 0.015625,
+          "width": 445,
+          "height": 279,
           "columns": 1,
           "rows": 1,
           "tileCount": 1,
           "directoryLevel": 0
         }
       ],
-      "tileCount": 714
+      "tileCount": 2642
     }
   ],
-  "totalTiles": 2732
+  "totalTiles": 8129
 }

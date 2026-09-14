@@ -1,0 +1,76 @@
+npc-beaverlumberjack.png
+size:1418,269
+filter:Linear,Linear
+pma:true
+ARM FAR
+bounds:144,7,46,66
+offsets:4,3,60,69
+ARM FAR TALK
+bounds:718,26,69,75
+offsets:1,1,70,76
+ARM NEAR
+bounds:2,2,65,71
+BELT
+bounds:982,64,227,42
+BELT POUCH
+bounds:192,11,79,62
+offsets:1,1,81,64
+BODY
+bounds:2,75,234,192
+offsets:0,1,251,193
+BODY LINE OL
+bounds:711,103,234,164
+offsets:0,1,234,165
+FOOT FAR
+bounds:866,11,67,29
+offsets:3,0,70,29
+FOOT NEAR
+bounds:935,11,67,29
+offsets:0,0,70,29
+FOOT NEAR SOLE
+bounds:1063,36,64,26
+offsets:0,1,65,28
+HAR FAR
+bounds:494,19,222,75
+HAT BRIM
+bounds:273,12,219,77
+offsets:1,0,221,77
+HAT CROWN
+bounds:1211,4,205,110
+offsets:0,2,205,112
+HAT LIGHT
+bounds:69,3,73,70
+offsets:1,1,75,72
+HEAD
+bounds:947,108,210,159
+offsets:0,0,210,160
+HEAD LINE OL
+bounds:1159,116,210,151
+offsets:0,0,210,152
+LOG
+bounds:375,96,334,171
+offsets:0,0,335,171
+MOUTH Open01
+bounds:796,3,33,37
+offsets:1,1,35,39
+MOUTH Open02
+bounds:831,9,33,31
+offsets:1,1,35,33
+MOUTH Open03
+bounds:718,3,41,21
+offsets:6,2,49,24
+MOUTH normal
+bounds:761,4,33,20
+offsets:6,1,40,22
+NOSE
+bounds:238,78,18,11
+offsets:1,1,20,13
+TAIL
+bounds:238,91,135,176
+TOPNOT
+bounds:1004,21,57,41
+offsets:2,1,60,43
+WHISKERS
+bounds:789,42,178,59
+philtrum
+bounds:969,57,11,49

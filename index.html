@@ -776,6 +776,35 @@
             will-change: transform;
         }
 
+        .bicycle-shape {
+            width: 100%;
+            height: 100%;
+            display: block;
+            overflow: visible;
+            filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.28));
+        }
+
+        .bicycle-shape .bicycle-wheel,
+        .bicycle-shape .bicycle-crank {
+            transform-box: fill-box;
+            transform-origin: center;
+            will-change: transform;
+        }
+
+        .scooter-shape {
+            width: 100%;
+            height: 100%;
+            display: block;
+            overflow: visible;
+            filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.28));
+        }
+
+        .scooter-shape .scooter-wheel {
+            transform-box: fill-box;
+            transform-origin: center;
+            will-change: transform;
+        }
+
         .helicopter-propeller > img {
             transform-origin: 50% 50%;
             animation: helicopter-propeller-spin 150ms linear infinite;
@@ -1351,6 +1380,14 @@
                 style="--mount-color:#38bdf8">Skiis</button>
             <button class="mount-mode-btn" type="button" data-mount="pogo-stick" title="Auto-bounce on landing; hold Jump for a stronger bounce"
                 style="--mount-color:#72c84a">Pogo Stick</button>
+            <button class="mount-mode-btn" type="button" data-mount="ball-balance" title="Balance on a rolling circus ball"
+                style="--mount-color:#f6b91a;color:#143f4a;text-shadow:none">Ball Balance</button>
+            <button class="mount-mode-btn" type="button" data-mount="unicycle" title="Lean to ride; jump while reversing to backflip"
+                style="--mount-color:#21c7bd;color:#143f4a;text-shadow:none">Unicycle</button>
+            <button class="mount-mode-btn" type="button" data-mount="bicycle" title="Pedal a simple bicycle"
+                style="--mount-color:#ff8a3d">Bicycle</button>
+            <button class="mount-mode-btn" type="button" data-mount="scooter" title="Skateboard-style movement on a scooter"
+                style="--mount-color:#ff3030">Scooter</button>
             <button class="mount-mode-btn" type="button" data-mount="cannon" title="Aim with A/D or Left/Right; hold the game area to charge, then release to fire"
                 style="--mount-color:#465262">Cannon</button>
             <button class="mount-mode-btn" type="button" data-mount="teleport" title="Become electricity and fly through the map at extreme speed for 3 seconds"
@@ -1423,9 +1460,9 @@
         </div>
         <button id="random-animation-test-btn" type="button" style="margin-top: 6px;">Rnd Anim Test: OFF</button>
         <select id="background-select" aria-label="Background image"></select>
-        <button id="toggle-background-btn" type="button" style="margin-top: 6px;">Hide BG</button>
-        <button id="toggle-leaves-btn" type="button" aria-label="Turn ambient leaves off"
-            aria-pressed="true" title="Toggle ambient leaves">🍃</button>
+        <button id="toggle-background-btn" type="button" style="margin-top: 6px;">Show BG</button>
+        <button id="toggle-leaves-btn" type="button" aria-label="Turn ambient leaves on"
+            aria-pressed="false" title="Show ambient leaves">🍃</button>
         <details id="character-skin-menu">
             <summary>Character skins</summary>
             <div id="skin-controls" aria-label="Skin selection controls"></div>
@@ -1514,6 +1551,9 @@
                     skateboardReversePushImpulse: 400, skateboardReversePushCount: 4,
                     skateboardPushThreshold: 940, skateboardStopSpeed: 8,
                     skateboardAirDrag: 20,
+                    // Airborne reversal carries a small amount of momentum into the
+                    // new direction so turning does not feel punitive.
+                    skateboardAirReverseMomentumRatio: 0.25,
                     skateboardIdleMoveAnimation: 'GameAnims/Mounts/skateboard_idleMove',
                     skateboardIdleStandAnimation: 'GameAnims/Mounts/skateboard_idleStand',
                     skateboardJumpAnimation: 'GameAnims/Mounts/skateboard_jump',
@@ -1521,18 +1561,100 @@
                     skateboardJumpRotationBone: 'skateboard_bone',
                     skateboardOllieChargeAnimation: 'GameAnims/Mounts/skateboard_downOllie',
                     skateboardOllieLaunchAnimation: 'GameAnims/Mounts/skateboard_upOllie',
+                    skateboardOllieCenterHoldDelay: 0.18,
                     skateboardOllieHeightMultiplier: 8,
                     skateboardPushAnimation: 'GameAnims/Mounts/skateboard_push',
                     skateboardPushEvent: 'skateboard_push'
                 },
+                scooter: {
+                    label: '', color: '#ff3030', glow: 'rgba(255,48,48,.78)',
+                    speed: 1250, accel: 0, decel: 85, jump: -800,
+                    width: 180, height: 120, bob: 0, placement: 'below', layer: 49,
+                    layeredArt: 'scooter', underlayLayer: 49,
+                    riderOnlyLift: 20,
+                    airControl: 0.12, suppressJumpAnimations: true,
+                    skateboardPropulsion: true, skateboardPushImpulse: 300,
+                    skateboardReversePushImpulse: 400, skateboardReversePushCount: 4,
+                    skateboardPushThreshold: 940, skateboardStopSpeed: 8,
+                    skateboardAirDrag: 20,
+                    skateboardAirReverseMomentumRatio: 0.25,
+                    skateboardIdleMoveAnimation: 'GameAnims/Mounts/skooter_idleMove',
+                    skateboardIdleStandAnimation: 'GameAnims/Mounts/skooter_idleStand',
+                    skateboardJumpAnimation: 'GameAnims/Mounts/skooter_jump',
+                    skateboardJumpStandAnimation: 'GameAnims/Mounts/skooter_jumpStand',
+                    skateboardJumpRotationBone: 'skooter_bone',
+                    skateboardOllieChargeAnimation: 'GameAnims/Mounts/skooter_downOllie',
+                    skateboardOllieLaunchAnimation: 'GameAnims/Mounts/skooter_upOllie',
+                    skateboardOllieCenterHoldDelay: 0.18,
+                    skateboardOllieHeightMultiplier: 8,
+                    skateboardPushAnimation: 'GameAnims/Mounts/skooter_push',
+                    skateboardPushEvent: 'skateboard_push',
+                    scooter: true, rollRadius: 12
+                },
                 skiis: {
                     label: '', color: '#38bdf8', glow: 'rgba(56,189,248,.65)',
-                    speed: 1750, accel: 480, decel: 18, jump: -500,
+                    speed: 1850, accel: 0, decel: 12, jump: -1074,
                     width: 220, height: 34, bob: 0, placement: 'below', layer: 49,
                     riderOnlyLift: 8, airControl: 0.2,
-                    loopAnimation: 'GameAnims/skiiLoop', suppressJumpAnimations: true,
-                    jumpMomentumBoost: 180,
+                    suppressJumpAnimations: true,
+                    skateboardPropulsion: true, skateboardPushImpulse: 210,
+                    skateboardReversePushImpulse: 280, skateboardReversePushCount: 5,
+                    skateboardPushThreshold: 1720, skateboardStopSpeed: 6,
+                    skateboardAirDrag: 5,
+                    skateboardAirReverseMomentumRatio: 0.25,
+                    skateboardIdleMoveAnimation: 'GameAnims/Mounts/skiis_idleMove',
+                    skateboardJumpAnimation: 'GameAnims/Mounts/skiis_jump',
+                    skateboardJumpRotationBone: 'skateboard_bone',
+                    skateboardOllieChargeAnimation: 'GameAnims/Mounts/skiis_downOllie',
+                    skateboardOllieLaunchAnimation: 'GameAnims/Mounts/skiis_upOllie',
+                    skateboardOllieCenterHoldDelay: 0.18,
+                    skateboardOllieHeightMultiplier: 8,
+                    skateboardPushAnimation: 'GameAnims/Mounts/skiis_push',
+                    skateboardPushEvent: 'skateboard_push',
                     airGravity: 4300, risingGravity: 4200, maxFall: 920
+                },
+                'ball-balance': {
+                    label: '', color: '#f6b91a', glow: 'rgba(246,185,26,.72)',
+                    speed: 880, accel: 1320, decel: 300,
+                    brakeAccel: 5200, reverseAccel: 2600, jump: -1500,
+                    width: 260, height: 260, bob: 0, placement: 'below', layer: 49,
+                    layeredArt: 'ball-balance', underlayLayer: 49,
+                    riderOnlyLift: 224, airControl: 0.32,
+                    loopAnimation: 'GameAnims/game_runLoop_cute_01 prance',
+                    suppressJumpAnimations: true, rollVisual: true, suppressArtFlip: true,
+                    ballBalance: true, balanceIdleSpeed: 32,
+                    balanceWobbleMaxAngle: 4.2, balanceWobbleMaxOffset: 7,
+                    balanceWobbleSpring: 42, balanceWobbleDamping: 8.5,
+                    balanceWobbleMinTime: 0.28, balanceWobbleMaxTime: 0.68,
+                    impactBounce: true,
+                    impactBounceBase: 0, impactBounceScale: 0.86,
+                    impactBounceMax: 4500, impactBounceMinImpact: 80,
+                    impactBounceMinSpeed: 100, impactBouncePump: 1200,
+                    impactBounceBuffer: 0.32
+                },
+                unicycle: {
+                    label: '', color: '#21c7bd', glow: 'rgba(33,199,189,.72)',
+                    speed: 820, accel: 1180, decel: 360,
+                    brakeAccel: 4100, reverseAccel: 2100, jump: -860,
+                    width: 175, height: 210, bob: 0, placement: 'below', layer: 51,
+                    layeredArt: 'unicycle', artLayerZ: [49, 51],
+                    riderOnlyLift: 176, airControl: 0.34,
+                    animation: 'idle', suppressJumpAnimations: true,
+                    unicycle: true, suppressArtFlip: true, rollRadius: 66,
+                    unicyclePivotY: 0.707,
+                    groundLean: 15, coastLean: 10, leanRate: 92,
+                    stopLeanSpring: 72, stopLeanDamping: 7.5,
+                    flipSpeed: 430
+                },
+                bicycle: {
+                    label: '', color: '#ff8a3d', glow: 'rgba(255,138,61,.72)',
+                    speed: 1050, accel: 1450, decel: 300,
+                    brakeAccel: 4600, reverseAccel: 2400, jump: -720,
+                    width: 300, height: 170, bob: 0, placement: 'below', layer: 49,
+                    layeredArt: 'bicycle', underlayLayer: 49,
+                    riderOnlyLift: 80, airControl: 0.3,
+                    loopAnimation: 'GameAnims/game_sit1Cycle',
+                    suppressJumpAnimations: true, bicycle: true, rollRadius: 40
                 },
                 'pogo-stick': {
                     label: '', color: '#72c84a', glow: 'rgba(114,200,74,.78)',
@@ -1708,10 +1830,43 @@
                         board.appendChild(layer);
                         return layer;
                     };
+                    const createMountShapeLayer = (className, markup) => {
+                        const layer = document.createElement('div');
+                        layer.className = `mount-art-layer ${className}`;
+                        layer.setAttribute('aria-hidden', 'true');
+                        layer.innerHTML = markup;
+                        board.appendChild(layer);
+                        return layer;
+                    };
                     const skateboardLayers = [
                         createMountArtLayer('skateboard-art', 'img_assets/mounts/skateboard/Skateboard.png', {
                             widthPercent: 100, heightPercent: 100, bottomPercent: 0
                         })
+                    ];
+                    const scooterLayers = [
+                        createMountShapeLayer('scooter-art', `
+                            <svg class="scooter-shape" viewBox="0 0 180 120" aria-hidden="true">
+                                <g class="scooter-wheel scooter-wheel-front">
+                                    <circle cx="28" cy="104" r="12" fill="#dffcff" stroke="#263442" stroke-width="6"/>
+                                    <line x1="28" y1="94" x2="28" y2="114" stroke="#69d8d0" stroke-width="2"/>
+                                    <line x1="18" y1="104" x2="38" y2="104" stroke="#69d8d0" stroke-width="2"/>
+                                    <circle cx="28" cy="104" r="3" fill="#ffca55"/>
+                                </g>
+                                <g class="scooter-wheel scooter-wheel-rear">
+                                    <circle cx="152" cy="104" r="12" fill="#dffcff" stroke="#263442" stroke-width="6"/>
+                                    <line x1="152" y1="94" x2="152" y2="114" stroke="#69d8d0" stroke-width="2"/>
+                                    <line x1="142" y1="104" x2="162" y2="104" stroke="#69d8d0" stroke-width="2"/>
+                                    <circle cx="152" cy="104" r="3" fill="#ffca55"/>
+                                </g>
+                                <path d="M35 90 L145 90 Q153 90 155 96 L156 101 L39 101 Q31 101 29 95 Z"
+                                    fill="#ff3030" stroke="#263442" stroke-width="5" stroke-linejoin="round"/>
+                                <path d="M35 91 L30 40" fill="none" stroke="#ff3030" stroke-width="9" stroke-linecap="round"/>
+                                <path d="M30 40 L25 17" fill="none" stroke="#263442" stroke-width="7" stroke-linecap="round"/>
+                                <path d="M12 16 L42 16" fill="none" stroke="#263442" stroke-width="8" stroke-linecap="round"/>
+                                <path d="M35 91 L28 104" fill="none" stroke="#263442" stroke-width="6" stroke-linecap="round"/>
+                                <rect x="68" y="84" width="48" height="5" rx="2.5" fill="#fff2b5" opacity=".9"/>
+                            </svg>
+                        `)
                     ];
                     const hoverBoardLayers = [
                         createMountArtLayer('hover-board-underlay', 'img_assets/mounts/hover-board/Underlay.png', {
@@ -1760,21 +1915,89 @@
                             widthPercent: 100, heightPercent: 100, bottomPercent: 0
                         })
                     ];
+                    const ballBalanceLayers = [
+                        createMountArtLayer('ball-balance-art', 'img_assets/mounts/ball-balance/BallBalance.png', {
+                            widthPercent: 100, heightPercent: 100, bottomPercent: 0
+                        })
+                    ];
+                    const unicycleLayers = [
+                        createMountArtLayer('unicycle-wheel', 'img_assets/mounts/unicycle/UnicycleWheel.png', {
+                            centerXPercent: 50, centerYPercent: 70.7,
+                            widthPercent: 100, heightPercent: 83.33
+                        }),
+                        createMountArtLayer('unicycle-frame', 'img_assets/mounts/unicycle/UnicycleFrame.png', {
+                            centerXPercent: 50, centerYPercent: 40,
+                            widthPercent: 100, heightPercent: 83.33
+                        })
+                    ];
+                    const bicycleLayers = [
+                        createMountShapeLayer('bicycle-art', `
+                            <svg class="bicycle-shape" viewBox="0 0 300 170" aria-hidden="true">
+                                <g class="bicycle-wheel bicycle-wheel-rear">
+                                    <circle cx="55" cy="125" r="40" fill="rgba(236,254,255,.18)" stroke="#202733" stroke-width="9"/>
+                                    <circle cx="55" cy="125" r="34" fill="none" stroke="#8be7ea" stroke-width="3"/>
+                                    <g stroke="#576575" stroke-width="2">
+                                        <line x1="55" y1="91" x2="55" y2="159"/>
+                                        <line x1="21" y1="125" x2="89" y2="125"/>
+                                        <line x1="31" y1="101" x2="79" y2="149"/>
+                                        <line x1="31" y1="149" x2="79" y2="101"/>
+                                    </g>
+                                    <circle cx="55" cy="125" r="6" fill="#ffcf4d" stroke="#202733" stroke-width="3"/>
+                                </g>
+                                <g class="bicycle-wheel bicycle-wheel-front">
+                                    <circle cx="245" cy="125" r="40" fill="rgba(236,254,255,.18)" stroke="#202733" stroke-width="9"/>
+                                    <circle cx="245" cy="125" r="34" fill="none" stroke="#8be7ea" stroke-width="3"/>
+                                    <g stroke="#576575" stroke-width="2">
+                                        <line x1="245" y1="91" x2="245" y2="159"/>
+                                        <line x1="211" y1="125" x2="279" y2="125"/>
+                                        <line x1="221" y1="101" x2="269" y2="149"/>
+                                        <line x1="221" y1="149" x2="269" y2="101"/>
+                                    </g>
+                                    <circle cx="245" cy="125" r="6" fill="#ffcf4d" stroke="#202733" stroke-width="3"/>
+                                </g>
+                                <g fill="none" stroke="#ff8a3d" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M55 125 L150 62 L145 125 Z"/>
+                                    <path d="M150 62 L208 72 L145 125"/>
+                                    <path d="M208 72 L245 125"/>
+                                </g>
+                                <g fill="none" stroke="#fff0bd" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M55 125 L150 62 L145 125 Z"/>
+                                    <path d="M150 62 L208 72 L145 125"/>
+                                </g>
+                                <path d="M208 72 L202 39 L224 34" fill="none" stroke="#334155" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M131 56 L169 56" fill="none" stroke="#334155" stroke-width="12" stroke-linecap="round"/>
+                                <g class="bicycle-crank">
+                                    <circle cx="145" cy="125" r="11" fill="#ffcf4d" stroke="#202733" stroke-width="4"/>
+                                    <line x1="127" y1="113" x2="163" y2="137" stroke="#202733" stroke-width="5" stroke-linecap="round"/>
+                                    <line x1="119" y1="110" x2="131" y2="110" stroke="#202733" stroke-width="6" stroke-linecap="round"/>
+                                    <line x1="159" y1="140" x2="171" y2="140" stroke="#202733" stroke-width="6" stroke-linecap="round"/>
+                                </g>
+                            </svg>
+                        `)
+                    ];
                     const mountArtLayerSets = Object.freeze({
                         skateboard: skateboardLayers,
+                        scooter: scooterLayers,
                         hoverboard: hoverBoardLayers,
                         'pogo-stick': pogoStickLayers,
                         cannon: cannonLayers,
                         'helicopter-hat': helicopterHatLayers,
-                        cloud: cloudLayers
+                        cloud: cloudLayers,
+                        'ball-balance': ballBalanceLayers,
+                        unicycle: unicycleLayers,
+                        bicycle: bicycleLayers
                     });
                     const allMountArtLayers = [
                         ...skateboardLayers,
+                        ...scooterLayers,
                         ...hoverBoardLayers,
                         ...pogoStickLayers,
                         ...cannonLayers,
                         ...helicopterHatLayers,
-                        ...cloudLayers
+                        ...cloudLayers,
+                        ...ballBalanceLayers,
+                        ...unicycleLayers,
+                        ...bicycleLayers
                     ];
                     const mountBlock = visual.querySelector('.mount-block');
                     const label = visual.querySelector('.mount-label');
@@ -1798,11 +2021,17 @@
                         skateboardJumpActive: false,
                         skateboardOllieCharging: false,
                         skateboardOllieActive: false,
+                        skateboardOllieCenterHoldTime: 0,
                         skateboardReversePushesRemaining: 0,
                         skateboardReverseDirection: 0,
                         hoverCoastTime: 0,
                         flightOriginY: 0,
                         ballRotation: 0,
+                        ballBalanceWobbleAngle: 0,
+                        ballBalanceWobbleVelocity: 0,
+                        ballBalanceWobbleTarget: 0,
+                        ballBalanceWobbleTimer: 0,
+                        ballBalanceWobbleX: 0,
                         impactBouncePumpTimer: 0,
                         pogoCompression: 0,
                         pogoBoostRequested: false,
@@ -1810,6 +2039,12 @@
                         pogoBounceTimer: 0,
                         pogoLeanAngle: 0,
                         pogoLeanVelocity: 0,
+                        unicycleFacingRight: true,
+                        unicycleLeanAngle: 0,
+                        unicycleLeanVelocity: 0,
+                        unicycleFlipping: false,
+                        unicycleFlipAngle: 0,
+                        unicycleFlipDirection: 0,
                         cannonAngle: 0,
                         cannonAnchorX: 0,
                         cannonAnchorY: 0,
@@ -1833,7 +2068,7 @@
                         mountZoomClearPrevious: false,
                         teleportRemaining: 0,
                         teleportPopTime: 0,
-                        leavesEnabled: true,
+                        leavesEnabled: false,
                         leafCanvas: null,
                         visualMode: null,
                         visualZoom: -1
@@ -1844,11 +2079,16 @@
                         const keyboardX = (api.isActionActive?.('right') ? 1 : 0)
                             - (api.isActionActive?.('left') ? 1 : 0);
                         const joystickX = joystick.active && Math.abs(joystick.x || 0) > 0.14 ? joystick.x : 0;
+                        const joystickCentered = Boolean(
+                            joystick.active
+                            && Math.hypot(joystick.x || 0, joystick.y || 0) <= 0.2
+                        );
                         return {
                             x: Math.max(-1, Math.min(1, joystickX || keyboardX)),
                             up: Boolean(api.isActionActive?.('jump') || (joystick.active && joystick.y > 0.48)),
                             down: Boolean(api.isActionActive?.('descend') || (joystick.active && joystick.y < -0.48)),
-                            joystickActive: Boolean(joystick.active)
+                            joystickActive: Boolean(joystick.active),
+                            joystickCentered
                         };
                     };
 
@@ -1983,9 +2223,12 @@
                     const beginSkateboardPush = (direction) => {
                         const config = MODE_CONFIG[state.mode];
                         if (state.phase !== 'active' || !config?.skateboardPropulsion
-                            || state.skateboardPushActive || state.skateboardJumpActive
+                            || state.skateboardPushActive
                             || state.skateboardOllieCharging || state.skateboardOllieActive
                             || !direction) return;
+                        // A landed push may start immediately, even if the jump
+                        // animation has not finished. The push animation takes over.
+                        state.skateboardJumpActive = false;
                         state.skateboardPushActive = true;
                         state.skateboardPushDirection = direction;
                         const token = ++state.animationToken;
@@ -1994,7 +2237,7 @@
                             (eventName) => {
                                 if (token !== state.animationToken
                                     || state.phase !== 'active'
-                                    || state.mode !== 'skateboard'
+                                    || !MODE_CONFIG[state.mode]?.skateboardPropulsion
                                     || eventName !== config.skateboardPushEvent) return;
                                 const liveDirection = Math.sign(getInputs().x);
                                 if (!api.player.onGround
@@ -2046,6 +2289,7 @@
                         state.skateboardPushActive = false;
                         state.skateboardPushDirection = 0;
                         state.skateboardJumpActive = false;
+                        state.skateboardOllieCenterHoldTime = 0;
                         state.skateboardOllieCharging = true;
                         api.setLoopAnimation?.(config.skateboardOllieChargeAnimation);
                     };
@@ -2055,6 +2299,7 @@
                         if (state.phase !== 'active' || !config?.skateboardPropulsion
                             || !state.skateboardOllieCharging) return false;
                         state.skateboardOllieCharging = false;
+                        state.skateboardOllieCenterHoldTime = 0;
                         if (!api.player.onGround) {
                             applyRiderAnimation();
                             return false;
@@ -2091,6 +2336,7 @@
                         state.skateboardPushDirection = 0;
                         state.skateboardJumpActive = true;
                         const jumpAnimation = jumpedFromStand
+                            && config.skateboardJumpStandAnimation
                             ? config.skateboardJumpStandAnimation
                             : config.skateboardJumpAnimation;
                         const entry = api.playAnimationWithEvents?.(
@@ -2119,7 +2365,8 @@
                             const animationName = Math.abs(state.horizontalVelocity)
                                 > config.skateboardStopSpeed
                                 ? config.skateboardIdleMoveAnimation
-                                : config.skateboardIdleStandAnimation;
+                                : (config.skateboardIdleStandAnimation
+                                    || config.skateboardIdleMoveAnimation);
                             api.setLoopAnimation?.(animationName);
                         } else if (config.loopAnimation) {
                             api.setLoopAnimation?.(config.loopAnimation);
@@ -2232,10 +2479,16 @@
                         state.skateboardJumpActive = false;
                         state.skateboardOllieCharging = false;
                         state.skateboardOllieActive = false;
+                        state.skateboardOllieCenterHoldTime = 0;
                         state.skateboardReversePushesRemaining = 0;
                         state.skateboardReverseDirection = 0;
                         state.hoverCoastTime = 0;
                         state.ballRotation = 0;
+                        state.ballBalanceWobbleAngle = 0;
+                        state.ballBalanceWobbleVelocity = 0;
+                        state.ballBalanceWobbleTarget = 0;
+                        state.ballBalanceWobbleTimer = 0;
+                        state.ballBalanceWobbleX = 0;
                         state.impactBouncePumpTimer = 0;
                         state.pogoCompression = 0;
                         state.pogoBoostRequested = false;
@@ -2243,6 +2496,12 @@
                         state.pogoBounceTimer = 0;
                         state.pogoLeanAngle = 0;
                         state.pogoLeanVelocity = 0;
+                        state.unicycleFacingRight = Boolean(api.player.facingRight);
+                        state.unicycleLeanAngle = 0;
+                        state.unicycleLeanVelocity = 0;
+                        state.unicycleFlipping = false;
+                        state.unicycleFlipAngle = 0;
+                        state.unicycleFlipDirection = 0;
                         state.cannonAngle = 0;
                         state.cannonFlightVx = 0;
                         state.cannonFlash = 0;
@@ -2474,6 +2733,97 @@
                                     state.pogoLeanVelocity *= -0.22;
                                 }
                             }
+                            if (state.phase === 'active' && pogoConfig?.unicycle) {
+                                const unicycleInputs = getInputs();
+                                const speedRatio = Math.max(-1, Math.min(
+                                    1,
+                                    api.player.vx / Math.max(1, pogoConfig.speed)
+                                ));
+                                if (state.unicycleFlipping && !api.player.onGround) {
+                                    state.unicycleFlipAngle += state.unicycleFlipDirection
+                                        * pogoConfig.flipSpeed * safeDt;
+                                }
+                                const hasGroundInput = api.player.onGround
+                                    && Math.abs(unicycleInputs.x) > 0.01;
+                                if (api.player.onGround && !hasGroundInput) {
+                                    state.unicycleLeanVelocity +=
+                                        -state.unicycleLeanAngle
+                                        * pogoConfig.stopLeanSpring
+                                        * safeDt;
+                                    state.unicycleLeanVelocity *= Math.exp(
+                                        -pogoConfig.stopLeanDamping * safeDt
+                                    );
+                                    state.unicycleLeanAngle +=
+                                        state.unicycleLeanVelocity * safeDt;
+                                    if (Math.abs(state.unicycleLeanAngle) < 0.02
+                                        && Math.abs(state.unicycleLeanVelocity) < 0.05) {
+                                        state.unicycleLeanAngle = 0;
+                                        state.unicycleLeanVelocity = 0;
+                                    }
+                                } else {
+                                    const targetLean = api.player.onGround
+                                        ? unicycleInputs.x * pogoConfig.groundLean
+                                        : speedRatio * pogoConfig.coastLean;
+                                    const previousLean = state.unicycleLeanAngle;
+                                    state.unicycleLeanAngle = moveToward(
+                                        state.unicycleLeanAngle,
+                                        targetLean,
+                                        pogoConfig.leanRate * safeDt
+                                    );
+                                    state.unicycleLeanVelocity = safeDt > 0
+                                        ? (state.unicycleLeanAngle - previousLean) / safeDt
+                                        : 0;
+                                }
+                                api.player.facingRight = state.unicycleFacingRight;
+                            }
+                            if (state.phase === 'active' && pogoConfig?.ballBalance) {
+                                const balanceInputs = getInputs();
+                                const balancingAtRest = api.player.onGround
+                                    && Math.abs(api.player.vx) < pogoConfig.balanceIdleSpeed
+                                    && Math.abs(balanceInputs.x) < 0.01;
+                                if (balancingAtRest) {
+                                    state.ballBalanceWobbleTimer -= safeDt;
+                                    if (state.ballBalanceWobbleTimer <= 0) {
+                                        const previousSide = Math.sign(
+                                            state.ballBalanceWobbleTarget
+                                                || state.ballBalanceWobbleAngle
+                                        ) || (Math.random() < 0.5 ? -1 : 1);
+                                        const magnitude = 0.45 + Math.random() * 0.55;
+                                        state.ballBalanceWobbleTarget = -previousSide
+                                            * pogoConfig.balanceWobbleMaxAngle
+                                            * magnitude;
+                                        state.ballBalanceWobbleTimer =
+                                            pogoConfig.balanceWobbleMinTime
+                                            + Math.random() * (
+                                                pogoConfig.balanceWobbleMaxTime
+                                                - pogoConfig.balanceWobbleMinTime
+                                            );
+                                    }
+                                } else {
+                                    state.ballBalanceWobbleTarget = 0;
+                                    state.ballBalanceWobbleTimer = 0;
+                                }
+                                const wobbleForce = (
+                                    state.ballBalanceWobbleTarget
+                                        - state.ballBalanceWobbleAngle
+                                ) * pogoConfig.balanceWobbleSpring;
+                                const wobbleDamping = state.ballBalanceWobbleVelocity
+                                    * pogoConfig.balanceWobbleDamping;
+                                state.ballBalanceWobbleVelocity += (
+                                    wobbleForce - wobbleDamping
+                                ) * safeDt;
+                                state.ballBalanceWobbleAngle +=
+                                    state.ballBalanceWobbleVelocity * safeDt;
+                                const wobbleLimit = pogoConfig.balanceWobbleMaxAngle * 1.15;
+                                state.ballBalanceWobbleAngle = Math.max(
+                                    -wobbleLimit,
+                                    Math.min(wobbleLimit, state.ballBalanceWobbleAngle)
+                                );
+                                state.ballBalanceWobbleX =
+                                    state.ballBalanceWobbleAngle
+                                    / pogoConfig.balanceWobbleMaxAngle
+                                    * pogoConfig.balanceWobbleMaxOffset;
+                            }
                             state.cannonFlash = Math.max(0, state.cannonFlash - safeDt);
                             if (state.cannonCharging && state.phase === 'active') {
                                 const chargeTime = Math.max(0.1, MODE_CONFIG[state.mode]?.chargeTime || 1);
@@ -2580,6 +2930,9 @@
 
                             const config = MODE_CONFIG[state.mode];
                             if (!config) return;
+                            if (config.unicycle) {
+                                player.facingRight = state.unicycleFacingRight;
+                            }
                             if (config.impactBounce && jumpJustPressed) {
                                 state.impactBouncePumpTimer = config.impactBounceBuffer ?? 0.24;
                                 if (state.wasGrounded) {
@@ -2641,16 +2994,30 @@
                             }
                             if (config.skateboardPropulsion) {
                                 const inputDirection = Math.sign(inputs.x);
-                                const ollieHeld = inputs.joystickActive && inputs.down;
                                 if (state.skateboardOllieCharging && !player.onGround) {
                                     state.skateboardOllieCharging = false;
+                                    state.skateboardOllieCenterHoldTime = 0;
                                     applyRiderAnimation();
-                                } else if (state.skateboardOllieCharging && !ollieHeld) {
+                                } else if (state.skateboardOllieCharging
+                                    && !inputs.joystickActive) {
                                     launchSkateboardOllie();
-                                } else if (player.onGround && ollieHeld
+                                } else if (state.skateboardOllieCharging
+                                    && !inputs.joystickCentered) {
+                                    state.animationToken += 1;
+                                    state.skateboardOllieCharging = false;
+                                    state.skateboardOllieCenterHoldTime = 0;
+                                    applyRiderAnimation();
+                                } else if (!state.skateboardOllieCharging
+                                    && player.onGround && inputs.joystickCentered
                                     && !state.skateboardJumpActive
                                     && !state.skateboardOllieActive) {
-                                    beginSkateboardOllieCharge();
+                                    state.skateboardOllieCenterHoldTime += dt;
+                                    if (state.skateboardOllieCenterHoldTime
+                                        >= config.skateboardOllieCenterHoldDelay) {
+                                        beginSkateboardOllieCharge();
+                                    }
+                                } else if (!state.skateboardOllieCharging) {
+                                    state.skateboardOllieCenterHoldTime = 0;
                                 }
                                 const drag = player.onGround
                                     ? config.decel
@@ -2667,6 +3034,18 @@
                                 const movingOppositeInput = inputDirection
                                     && Math.sign(state.horizontalVelocity)
                                     && inputDirection !== Math.sign(state.horizontalVelocity);
+                                // Skateboard and scooter share this propulsion loop. If
+                                // the rider reverses while airborne, carry a small
+                                // fraction of the current momentum into that direction.
+                                if (!player.onGround && movingOppositeInput) {
+                                    state.horizontalVelocity = Math.sign(inputDirection)
+                                        * Math.abs(state.horizontalVelocity)
+                                        * Math.max(0, Math.min(1,
+                                            Number(config.skateboardAirReverseMomentumRatio) || 0
+                                        ));
+                                    state.skateboardReversePushesRemaining = 0;
+                                    state.skateboardReverseDirection = 0;
+                                }
                                 if (state.skateboardReversePushesRemaining > 0
                                     && inputDirection !== state.skateboardReverseDirection) {
                                     state.skateboardReversePushesRemaining = 0;
@@ -2689,6 +3068,11 @@
                                 }
                                 player.vx = state.horizontalVelocity;
                                 state.commandedVelocity = player.vx;
+                                if (config.scooter) {
+                                    state.ballRotation = (state.ballRotation
+                                        + (player.vx * Math.min(dt, 0.05)
+                                            / config.rollRadius) * (180 / Math.PI)) % 360;
+                                }
                                 player.isMoving = Math.abs(player.vx) > config.skateboardStopSpeed;
                                 player.isRunning = false;
                                 const skateboardTakeoff = state.wasGrounded
@@ -2755,8 +3139,11 @@
                             if (config.invertFacing && Math.abs(player.vx) > 8) {
                                 player.facingRight = player.vx > 0;
                             }
-                            if (config.rollVisual) {
-                                const radius = Math.max(1, config.width * 0.5);
+                            if (config.rollVisual || config.unicycle || config.bicycle) {
+                                const radius = Math.max(
+                                    1,
+                                    config.rollRadius ?? config.width * 0.5
+                                );
                                 state.ballRotation = (state.ballRotation
                                     + (player.vx * Math.min(dt, 0.05) / radius) * (180 / Math.PI)) % 360;
                             }
@@ -2766,6 +3153,18 @@
 
                             if (!config.autoBounce && !config.impactBounce
                                 && jumpJustPressed && state.wasGrounded) {
+                                if (config.unicycle) {
+                                    const facingDirection = state.unicycleFacingRight ? 1 : -1;
+                                    const travelDirection = Math.sign(inputs.x)
+                                        || Math.sign(state.horizontalVelocity);
+                                    const jumpingBackward = travelDirection
+                                        && travelDirection !== facingDirection;
+                                    state.unicycleFlipping = Boolean(jumpingBackward);
+                                    state.unicycleFlipAngle = state.unicycleLeanAngle;
+                                    state.unicycleFlipDirection = jumpingBackward
+                                        ? (state.unicycleFacingRight ? -1 : 1)
+                                        : 0;
+                                }
                                 if (config.jumpMomentumBoost) {
                                     const pumpDirection = Math.sign(inputs.x)
                                         || Math.sign(state.horizontalVelocity);
@@ -2891,6 +3290,12 @@
                                 state.hoverCoastTime = 0;
                             }
                             const activeConfig = MODE_CONFIG[state.mode];
+                            if (state.phase === 'active' && activeConfig?.unicycle
+                                && !state.wasGrounded && player.onGround) {
+                                state.unicycleFlipping = false;
+                                state.unicycleFlipAngle = 0;
+                                state.unicycleFlipDirection = 0;
+                            }
                             if (state.phase === 'active' && activeConfig?.impactBounce
                                 && !state.wasGrounded && player.onGround) {
                                 const landingImpact = Math.max(
@@ -3053,6 +3458,10 @@
                             const mountX = config.cannon ? state.cannonAnchorX : player.x;
                             const mountY = config.cannon ? state.cannonAnchorY : player.y;
                             const centerX = (mountX + player.width * 0.5 - camera.x) * zoom;
+                            const balanceVisualOffsetX = config.ballBalance
+                                ? state.ballBalanceWobbleX * zoom
+                                : 0;
+                            const balanceCenterX = centerX + balanceVisualOffsetX;
                             let anchorY = mountY + player.height;
                             if (config.placement === 'above') anchorY = mountY - 13 - (config.anchorOffset || 0);
                             else if (config.placement === 'above-high') anchorY = mountY - 58 - (config.anchorOffset || 0);
@@ -3078,24 +3487,29 @@
                                     + Math.sin(state.elapsed * 2.2) * 2.5
                                 : 0;
                             const facingScale = player.facingRight ? 1 : -1;
-                            const skateboardAirAnimationActive = state.mode === 'skateboard'
+                            const skateboardAirAnimationActive = Boolean(config.skateboardPropulsion)
                                 && (state.skateboardJumpActive
                                     || state.skateboardOllieCharging
                                     || state.skateboardOllieActive);
                             const skateboardJumpRotation = skateboardAirAnimationActive
+                                && config.skateboardJumpRotationBone
                                 ? (Number(api.getBoneRotation?.(
                                     config.skateboardJumpRotationBone
                                 )) || 0) * facingScale
                                 : 0;
-                            const tilt = config.rollVisual
-                                ? state.ballRotation
+                            const tilt = config.unicycle
+                                ? (state.unicycleFlipping
+                                    ? state.unicycleFlipAngle
+                                    : state.unicycleLeanAngle)
+                                : (config.rollVisual
+                                    ? state.ballRotation
                                 : (config.flight
                                     ? speedRatio * 5
-                                    : (state.mode === 'skateboard' || state.mode === 'hoverboard'
+                                    : (config.skateboardPropulsion || state.mode === 'hoverboard'
                                         ? speedRatio * 2.5
                                         : (config.pogoVisual
                                             ? state.pogoLeanAngle
-                                            : 0)));
+                                            : 0))));
                             if (playerElement && (config.riderLift || config.riderBob || config.riderOnlyLift
                                 || config.pogoVisual || (config.cannon && state.phase === 'active'))) {
                                 const baseTop = Number.parseFloat(playerElement.style.top) || 0;
@@ -3104,6 +3518,17 @@
                             if (playerElement && config.riderOffsetX) {
                                 const baseLeft = Number.parseFloat(playerElement.style.left) || 0;
                                 playerElement.style.left = `${baseLeft + config.riderOffsetX * facingScale * zoom}px`;
+                            }
+                            if (playerElement && config.ballBalance) {
+                                const baseLeft = Number.parseFloat(playerElement.style.left) || 0;
+                                playerElement.style.left = `${baseLeft + balanceVisualOffsetX}px`;
+                                const playerLeft = Number.parseFloat(playerElement.style.left) || 0;
+                                const playerTop = Number.parseFloat(playerElement.style.top) || 0;
+                                const balancePivotY = screenY - config.height * zoom;
+                                playerElement.style.transformOrigin =
+                                    `${balanceCenterX - playerLeft}px ${balancePivotY - playerTop}px`;
+                                playerElement.style.transform =
+                                    `rotate(${-state.ballBalanceWobbleAngle}deg) scaleX(-1)`;
                             }
                             if (playerElement && config.pogoVisual && !config.rotateRiderWithPogo) {
                                 const baseLeft = Number.parseFloat(playerElement.style.left) || 0;
@@ -3153,6 +3578,15 @@
                                     `${centerX - playerLeft}px ${ballCenterY - playerTop}px`;
                                 playerElement.style.transform = `rotate(${state.ballRotation}deg)`;
                             }
+                            if (playerElement && config.unicycle) {
+                                const playerLeft = Number.parseFloat(playerElement.style.left) || 0;
+                                const playerTop = Number.parseFloat(playerElement.style.top) || 0;
+                                const unicyclePivotY = screenY
+                                    - config.height * (1 - config.unicyclePivotY) * zoom;
+                                playerElement.style.transformOrigin =
+                                    `${centerX - playerLeft}px ${unicyclePivotY - playerTop}px`;
+                                playerElement.style.transform = `rotate(${tilt}deg)`;
+                            }
                             if (playerElement && config.dangling) {
                                 const danglingTilt = speedRatio * 45 - Math.sin(state.elapsed * 2.25) * 18;
                                 playerElement.style.transformOrigin = '50% 48%';
@@ -3188,17 +3622,56 @@
                                         && layer.classList.contains('cannon-barrel');
                                     const isHelicopterHatBody = config.hatPendulum
                                         && layer.classList.contains('helicopter-hat-body');
+                                    const isBallBalanceArt = layer.classList.contains('ball-balance-art');
+                                    const isUnicycleWheel = layer.classList.contains('unicycle-wheel');
+                                    const isBicycleArt = layer.classList.contains('bicycle-art');
+                                    const isScooterArt = layer.classList.contains('scooter-art');
                                     const isJumpingSkateboard = skateboardAirAnimationActive
-                                        && layer.classList.contains('skateboard-art');
+                                        && (layer.classList.contains('skateboard-art')
+                                            || isScooterArt);
                                     const partCompressionOffset = isPogoBody ? compressionOffset * zoom : 0;
                                     const partTilt = isJumpingSkateboard
                                         ? skateboardJumpRotation
-                                        : ((config.cannon || config.hatPendulum) ? 0 : tilt);
-                                    const partFacingScale = (config.cannon || config.hatPendulum) ? 1 : facingScale;
-                                    layer.style.left = `${centerX}px`;
+                                        : ((config.cannon || config.hatPendulum || isBallBalanceArt) ? 0 : tilt);
+                                    const defaultPartFacingScale = (config.cannon || config.hatPendulum
+                                        || config.suppressArtFlip) ? 1 : facingScale;
+                                    const partFacingScale = config.bicycle
+                                        ? -defaultPartFacingScale
+                                        : defaultPartFacingScale;
+                                    const partCenterX = isBallBalanceArt
+                                        ? balanceCenterX
+                                        : centerX;
+                                    layer.style.transformOrigin = config.unicycle
+                                        ? `50% ${config.unicyclePivotY * 100}%`
+                                        : '';
+                                    layer.style.left = `${partCenterX}px`;
                                     layer.style.top = `${screenY + partCompressionOffset}px`;
                                     layer.style.transform = `translate(-50%, -100%) rotate(${partTilt}deg) scaleX(${partFacingScale})`;
-                                    if (isCannonBarrel) {
+                                    if (isBallBalanceArt) {
+                                        layer.firstElementChild.style.transformOrigin = '50% 50%';
+                                        layer.firstElementChild.style.transform =
+                                            `translateX(-50%) rotate(${
+                                                state.ballRotation
+                                                    + state.ballBalanceWobbleAngle
+                                            }deg)`;
+                                    } else if (isUnicycleWheel) {
+                                        layer.firstElementChild.style.transformOrigin = '50% 50%';
+                                        layer.firstElementChild.style.transform =
+                                            `translate(-50%, -50%) rotate(${state.ballRotation}deg)`;
+                                    } else if (isBicycleArt) {
+                                        layer.querySelectorAll('.bicycle-wheel').forEach((wheel) => {
+                                            wheel.style.transform = `rotate(${state.ballRotation}deg)`;
+                                        });
+                                        const crank = layer.querySelector('.bicycle-crank');
+                                        if (crank) {
+                                            crank.style.transform =
+                                                `rotate(${state.ballRotation * 2.4}deg)`;
+                                        }
+                                    } else if (isScooterArt) {
+                                        layer.querySelectorAll('.scooter-wheel').forEach((wheel) => {
+                                            wheel.style.transform = `rotate(${state.ballRotation}deg)`;
+                                        });
+                                    } else if (isCannonBarrel) {
                                         layer.firstElementChild.style.transform =
                                             `translate(-50%, -50%) rotate(${state.cannonAngle}deg)`;
                                     } else if (isHelicopterHatBody) {
