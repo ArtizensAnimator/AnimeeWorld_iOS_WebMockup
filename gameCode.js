@@ -7069,7 +7069,7 @@ import { createBeaverNpcController } from './beaverNpc.js';
             const SWORD_HITBOX_FREEZE_DURATION = 0.3;
             const TALK_ANIMATION_NAMES = Object.freeze([
                 "GameAnims/game_talkLoop_neutral",
-                "GameAnims/game_talkLoop_excited"
+                "GameAnims/Talking/game_talkLoop_excited_ALLSEGMENTS"
             ]);
             const TALK_LIP_SYNC_ANIMATION_NAMES = Object.freeze([
                 "GameAnims/game_talkLoop_LipSyncOnly",
