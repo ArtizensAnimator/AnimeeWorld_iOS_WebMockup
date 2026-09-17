@@ -585,6 +585,27 @@
             white-space: nowrap;
         }
 
+        #talk-animation-label {
+            position: absolute;
+            left: 50%;
+            top: var(--talk-label-top, 50%);
+            transform: translate(-50%, 7px);
+            padding: 2px 5px;
+            border-radius: 4px;
+            background: rgba(12, 16, 24, 0.62);
+            color: rgba(255, 255, 255, 0.82);
+            font: 600 9px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            letter-spacing: 0.02em;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 7;
+        }
+
+        #talk-animation-label:empty {
+            display: none;
+        }
+
         .skin-row {
             display: grid;
             grid-template-columns: 16px max-content 16px 1fr 16px;
@@ -1516,6 +1537,7 @@
                     <div id="jetpack-bar-fill"></div>
                 </div>
                 <div id="sit-prompt" aria-live="polite">Press F to sit</div>
+                <div id="talk-animation-label" aria-live="polite"></div>
             </div>
         </div>
     </div>

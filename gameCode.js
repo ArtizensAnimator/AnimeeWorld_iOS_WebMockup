@@ -355,6 +355,7 @@ import { createBeaverNpcController } from './beaverNpc.js';
             const ambientLeafOverlayCanvas = document.createElement('canvas');
             const ambientLeafOverlayCtx = ambientLeafOverlayCanvas.getContext('2d');
             const playerContainerElement = document.getElementById('player-container');
+            const talkAnimationLabelElement = document.getElementById('talk-animation-label');
             const joystickContainer = document.getElementById('joystick');
             const mouseTrackerElement = document.getElementById('mouse-tracker');
             const joystickThumb = document.getElementById('joystick-thumb');
@@ -8683,6 +8684,7 @@ import { createBeaverNpcController } from './beaverNpc.js';
                     onClipStart: (clip, entry, snapshot) => {
                         currentTalkEntry = entry;
                         currentTalkAnimationName = clip.animation;
+                        updateTalkAnimationLabel(clip.animation);
                         if (playerContainerElement) {
                             playerContainerElement.dataset.talkSystem = 'weighted-state-machine';
                             playerContainerElement.dataset.talkPose = snapshot?.pose || clip.from;
@@ -8693,6 +8695,7 @@ import { createBeaverNpcController } from './beaverNpc.js';
                     onStop: () => {
                         currentTalkEntry = null;
                         currentTalkAnimationName = '';
+                        updateTalkAnimationLabel('');
                         if (playerContainerElement) {
                             playerContainerElement.dataset.talkPose = 'H';
                             playerContainerElement.dataset.talkNextPose = '';
@@ -8717,6 +8720,7 @@ import { createBeaverNpcController } from './beaverNpc.js';
                 }
                 currentTalkEntry = null;
                 currentTalkAnimationName = '';
+                updateTalkAnimationLabel('');
                 if (playerContainerElement) playerContainerElement.dataset.talkOverlayAnimation = '';
             }
 
@@ -8742,6 +8746,7 @@ import { createBeaverNpcController } from './beaverNpc.js';
                 const entry = setLoggedAnimation(TALK_TRACK_INDEX, currentTalkAnimationName, true, animationState);
                 if (!entry) return null;
                 currentTalkEntry = entry;
+                updateTalkAnimationLabel(currentTalkAnimationName);
                 entry.alpha = 1;
                 entry.mixDuration = 0;
                 entry.mixTime = 0;
@@ -8791,6 +8796,13 @@ import { createBeaverNpcController } from './beaverNpc.js';
                     talkSpeechActive = false;
                     speechBubbleController?.handleTalkState(false);
                 }
+            }
+
+            function updateTalkAnimationLabel(animationName) {
+                if (!talkAnimationLabelElement) return;
+                const shortName = String(animationName || '').split('/').pop() || '';
+                talkAnimationLabelElement.textContent = shortName;
+                talkAnimationLabelElement.title = animationName || '';
             }
 
 
@@ -9863,6 +9875,8 @@ import { createBeaverNpcController } from './beaverNpc.js';
                 const promptOffsetY = (SITTING_PROMPT_OFFSET.y || 0) * zoomScale;
                 playerContainerElement.style.setProperty('--sit-prompt-offset-x', `${promptOffsetX}px`);
                 playerContainerElement.style.setProperty('--sit-prompt-offset-y', `${promptOffsetY}px`);
+                const talkLabelTop = (containerHeight + FOOT_OFFSET) * zoomLevel;
+                playerContainerElement.style.setProperty('--talk-label-top', `${talkLabelTop}px`);
 
 
                 if (emoteMenuController) {
