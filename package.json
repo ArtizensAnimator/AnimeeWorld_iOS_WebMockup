@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Browser-runnable AnimeeWorld mockup shared between macOS and Windows",
   "scripts": {
-    "check": "node --check scripts/serve-web.mjs && node --check backgroundTiles.js && node --check gameCode.js && node scripts/check-background-tiles.mjs",
+    "check": "node --check scripts/serve-web.mjs && node --check backgroundTiles.js && node --check gameCode.js && node --check talkingStateMachine.js && node scripts/check-talking-state-machine.mjs && node scripts/check-background-tiles.mjs",
     "dev": "node scripts/serve-web.mjs",
     "start": "npm run dev"
   },

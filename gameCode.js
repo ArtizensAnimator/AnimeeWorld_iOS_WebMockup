@@ -75,6 +75,7 @@ import { createBeaverNpcController } from './beaverNpc.js';
 
             // MARK: - --- Game Constants and VARIABLES ---
             const IS_NATIVE_IOS = window.Capacitor?.getPlatform?.() === 'ios';
+            const CHARACTER_SKEL_URL = 'spine stuff/chibi-2.skel';
             const CHARACTER_ATLAS_URL = IS_NATIVE_IOS
                 ? 'spine stuff/chibi-mobile.atlas'
                 : 'spine stuff/chibi.atlas';
@@ -415,7 +416,7 @@ import { createBeaverNpcController } from './beaverNpc.js';
                     playerContainer: playerContainerElement,
                     gameBoard: gameBoardElement,
                     spineLib: spine,
-                    npcAssets: { skelUrl: 'spine stuff/chibi.skel', atlasUrl: CHARACTER_ATLAS_URL },
+                    npcAssets: { skelUrl: CHARACTER_SKEL_URL, atlasUrl: CHARACTER_ATLAS_URL },
                     renderScale: SPINE_RENDER_SCALE,
                     playerVisualSize: PLAYER_CONTAINER_SIZE,
                     footOffset: FOOT_OFFSET,
@@ -428,7 +429,7 @@ import { createBeaverNpcController } from './beaverNpc.js';
                     includeHair: () => hairColoringEnabled,
                     onChatStateChange: (active) => {
                         if (!active) {
-                            clearTalkOverlay();
+                            stopTalkOverlay();
                             speechBubbleController?.handleTalkState(false);
                         }
                     }
@@ -4708,7 +4709,7 @@ import { createBeaverNpcController } from './beaverNpc.js';
                             playerContainerElement.dataset.beaverConversationFacing = player.facingRight ? 'left' : 'right';
                             syncPlayerSkeletonScale();
                         } else {
-                            clearTalkOverlay();
+                            stopTalkOverlay();
                         }
                     },
                     getSceneState: () => ({
@@ -7067,7 +7068,20 @@ import { createBeaverNpcController } from './beaverNpc.js';
             const SWORD_HITBOX_VERTICAL_OFFSET = -200;
             const SWORD_HITBOX_FLASH_TIME = 0.1;
             const SWORD_HITBOX_FREEZE_DURATION = 0.3;
-            const TALK_ANIMATION_NAMES = Object.freeze([
+            const TALK_TRANSITION_CLIPS = Object.freeze([
+                { animation: "GameAnims/Talking/talk_H_H_01", from: 'H', to: 'H', weight: 8 },
+                { animation: "GameAnims/Talking/talk_H_A_01", from: 'H', to: 'A', weight: 2 },
+                { animation: "GameAnims/Talking/talk_A_H_01", from: 'A', to: 'H', weight: 5 },
+                { animation: "GameAnims/Talking/talk_A_B_01", from: 'A', to: 'B', weight: 1 },
+                { animation: "GameAnims/Talking/talk_B_C_01", from: 'B', to: 'C', weight: 1 },
+                { animation: "GameAnims/Talking/talk_C_A_01", from: 'C', to: 'A', weight: 4 },
+                { animation: "GameAnims/Talking/talk_C_D_01", from: 'C', to: 'D', weight: 1 },
+                { animation: "GameAnims/Talking/talk_D_E_01", from: 'D', to: 'E', weight: 1 },
+                { animation: "GameAnims/Talking/talk_E_F_01", from: 'E', to: 'F', weight: 1 },
+                { animation: "GameAnims/Talking/talk_F_G_01", from: 'F', to: 'G', weight: 1 },
+                { animation: "GameAnims/Talking/talk_G_A_01", from: 'G', to: 'A', weight: 1 }
+            ].map(Object.freeze));
+            const TALK_FALLBACK_ANIMATION_NAMES = Object.freeze([
                 "GameAnims/game_talkLoop_neutral",
                 "GameAnims/Talking/game_talkLoop_excited_ALLSEGMENTS"
             ]);
@@ -7357,6 +7371,8 @@ import { createBeaverNpcController } from './beaverNpc.js';
             let currentStopOverlayEntry = null;
             let currentTalkEntry = null;
             let currentTalkAnimationName = '';
+            let talkTransitionController = null;
+            let talkSpeechActive = false;
             let currentTalkLipSyncEntry = null;
             let talkLipSyncVariantIndex = 0;
             let talkLipSyncSwitchTimer = 0;
@@ -7746,7 +7762,7 @@ import { createBeaverNpcController } from './beaverNpc.js';
             function setupSpine() {
                 console.info(`[startup] Loading player atlas: ${CHARACTER_ATLAS_URL}`);
                 new spine.SpinePlayer("player-container", {
-                    skelUrl: "spine stuff/chibi.skel", atlasUrl: CHARACTER_ATLAS_URL, alpha: true,
+                    skelUrl: CHARACTER_SKEL_URL, atlasUrl: CHARACTER_ATLAS_URL, alpha: true,
                     showControls: false, defaultMix: 0.05, fitToCanvas: false, viewport: PLAYER_VIEWPORT_CONFIG,
                     success: (instance) => {
                         console.info('[startup] Player Spine ready.');
@@ -7759,6 +7775,16 @@ import { createBeaverNpcController } from './beaverNpc.js';
                         spineData = instance.skeleton.data;
                         allSkinNames = spineData.skins.map(s => s.name);
                         populateAvailableSkins();
+                        talkTransitionController = createTalkTransitionController(
+                            spinePlayer.animationState,
+                            spineData
+                        );
+                        if (playerContainerElement) {
+                            playerContainerElement.dataset.talkSystem = talkTransitionController
+                                ? 'weighted-state-machine'
+                                : 'legacy-loop-fallback';
+                            playerContainerElement.dataset.talkPose = 'H';
+                        }
 
 
 
@@ -8588,7 +8614,7 @@ import { createBeaverNpcController } from './beaverNpc.js';
             function updateTalkLipSyncOverlay(dt) {
                 const animationState = spinePlayer?.animationState;
                 const skeletonData = spinePlayer?.skeleton?.data;
-                if (!currentTalkEntry || !animationState || !skeletonData) {
+                if (!talkSpeechActive || !currentTalkEntry || !animationState || !skeletonData) {
                     if (currentTalkLipSyncEntry || animationState?.getCurrent?.(TALK_LIP_SYNC_TRACK_INDEX)) {
                         clearTalkLipSyncOverlay();
                     }
@@ -8629,19 +8655,86 @@ import { createBeaverNpcController } from './beaverNpc.js';
                 playerContainerElement.dataset.talkLipSyncTrack = String(TALK_LIP_SYNC_TRACK_INDEX);
             }
 
-            function clearTalkOverlay() {
+            function createTalkTransitionController(animationState, skeletonData) {
+                const talkingApi = window.WeightedTalking;
+                if (!talkingApi?.PoseTransitionStateMachine || !talkingApi?.SpineTalkingController) return null;
+
+                const availableAnimationNames = Array.isArray(skeletonData.animations)
+                    ? skeletonData.animations.map(animation => animation?.name).filter(Boolean)
+                    : [];
+                const machine = new talkingApi.PoseTransitionStateMachine({
+                    homePose: 'H',
+                    clips: TALK_TRANSITION_CLIPS
+                }).setAvailableAnimations(availableAnimationNames);
+                if (!machine.hasPlayableGraph()) return null;
+
+                return new talkingApi.SpineTalkingController({
+                    machine,
+                    animationState,
+                    trackIndex: TALK_TRACK_INDEX,
+                    mixDuration: 0,
+                    setAnimation: animationName => setLoggedAnimation(
+                        TALK_TRACK_INDEX,
+                        animationName,
+                        false,
+                        animationState
+                    ),
+                    clearTrack: () => clearTrackLogged(TALK_TRACK_INDEX, animationState),
+                    onClipStart: (clip, entry, snapshot) => {
+                        currentTalkEntry = entry;
+                        currentTalkAnimationName = clip.animation;
+                        if (playerContainerElement) {
+                            playerContainerElement.dataset.talkSystem = 'weighted-state-machine';
+                            playerContainerElement.dataset.talkPose = snapshot?.pose || clip.from;
+                            playerContainerElement.dataset.talkNextPose = clip.to;
+                            playerContainerElement.dataset.talkOverlayAnimation = clip.animation;
+                        }
+                    },
+                    onStop: () => {
+                        currentTalkEntry = null;
+                        currentTalkAnimationName = '';
+                        if (playerContainerElement) {
+                            playerContainerElement.dataset.talkPose = 'H';
+                            playerContainerElement.dataset.talkNextPose = '';
+                            playerContainerElement.dataset.talkOverlayAnimation = '';
+                        }
+                    }
+                });
+            }
+
+            function stopTalkOverlay(options = {}) {
+                talkSpeechActive = false;
+                clearTalkLipSyncOverlay();
+                speechBubbleController?.handleTalkState(false);
+
+                if (talkTransitionController) {
+                    talkTransitionController.stop({ immediate: Boolean(options.immediate) });
+                    return;
+                }
+
                 if (spinePlayer?.animationState) {
                     clearTrackLogged(TALK_TRACK_INDEX, spinePlayer.animationState);
                 }
                 currentTalkEntry = null;
                 currentTalkAnimationName = '';
-                clearTalkLipSyncOverlay();
                 if (playerContainerElement) playerContainerElement.dataset.talkOverlayAnimation = '';
-                speechBubbleController?.handleTalkState(false);
+            }
+
+            function clearTalkOverlay() {
+                stopTalkOverlay({ immediate: true });
             }
 
             function startTalkOverlay(animationState, skeletonData) {
-                const availableAnimations = TALK_ANIMATION_NAMES.filter(name => skeletonData.findAnimation(name));
+                if (!talkTransitionController) {
+                    talkTransitionController = createTalkTransitionController(animationState, skeletonData);
+                }
+                if (talkTransitionController) {
+                    const entry = talkTransitionController.start();
+                    currentTalkEntry = entry || currentTalkEntry;
+                    return entry || currentTalkEntry;
+                }
+
+                const availableAnimations = TALK_FALLBACK_ANIMATION_NAMES.filter(name => skeletonData.findAnimation(name));
                 if (!availableAnimations.length) return null;
                 if (!currentTalkAnimationName || !availableAnimations.includes(currentTalkAnimationName)) {
                     currentTalkAnimationName = availableAnimations[Math.floor(Math.random() * availableAnimations.length)];
@@ -8653,105 +8746,50 @@ import { createBeaverNpcController } from './beaverNpc.js';
                 entry.mixDuration = 0;
                 entry.mixTime = 0;
                 if (playerContainerElement) {
+                    playerContainerElement.dataset.talkSystem = 'legacy-loop-fallback';
                     playerContainerElement.dataset.talkOverlayAnimation = currentTalkAnimationName;
                 }
                 return entry;
             }
 
-
-
-
-
             function updateTalkOverlay() {
                 const animationState = spinePlayer?.animationState;
                 const skeletonData = spinePlayer?.skeleton?.data;
-
+                talkTransitionController?.update();
 
                 if (!animationState || !skeletonData) {
-                    currentTalkEntry = null;
-                    speechBubbleController?.handleTalkState(false);
+                    clearTalkOverlay();
                     return;
                 }
-
-                // Safety checks
-                if (!animationState || !skeletonData) {
-                    currentTalkEntry = null;
-                    speechBubbleController?.handleTalkState(false);
-                    return;
-                }
-
-                if (beaverConversationState.active) {
-                    const activeEntry = animationState.getCurrent(TALK_TRACK_INDEX);
-                    if (!currentTalkEntry || activeEntry !== currentTalkEntry) {
-                        if (!startTalkOverlay(animationState, skeletonData)) {
-                            currentTalkEntry = null;
-                            speechBubbleController?.handleTalkState(false);
-                            return;
-                        }
-                    }
-                    speechBubbleController?.handleTalkState(true);
-                    return;
-                }
-
-
-                // If the ChatBot is active, we FORCE the talk animation to play
-                if (chatBotController?.isChatting?.()) {
-                    // If animation is NOT playing yet, start it
-                    if (!currentTalkEntry) {
-                        if (!startTalkOverlay(animationState, skeletonData)) {
-                            speechBubbleController?.handleTalkState(false);
-                            return;
-                        }
-                    }
-
-                    // Ensure the speech bubble manager knows we are talking
-                    speechBubbleController?.handleTalkState(true);
-                    return;
-                }
-
-
-
 
                 const talkHeld = isActionActive('chat');
                 const stationary = !player.isMoving && Math.abs(player.vx) < 0.01 && player.onGround && !player.isLandingAnimation;
                 const canTalk = talkHeld && stationary && player.lieState === 'none' && player.fidgetState === 'none';
-                if (chatBotController?.isChatting?.()) {
-                    if (!currentTalkEntry) {
-                        if (!startTalkOverlay(animationState, skeletonData)) {
-                            speechBubbleController?.handleTalkState(false);
-                            return;
-                        }
-                    } else {
-                        const activeEntry = animationState.getCurrent(TALK_TRACK_INDEX);
-                        if (activeEntry !== currentTalkEntry) {
-                            if (!activeEntry) clearTalkOverlay();
-                            currentTalkEntry = activeEntry || null;
-                        }
+                const talkRequested = beaverConversationState.active
+                    || Boolean(chatBotController?.isChatting?.())
+                    || canTalk;
+
+                if (talkRequested) {
+                    talkSpeechActive = true;
+                    if (!startTalkOverlay(animationState, skeletonData)) {
+                        talkSpeechActive = false;
+                        speechBubbleController?.handleTalkState(false);
+                        return;
                     }
                     speechBubbleController?.handleTalkState(true);
                     return;
                 }
-                if (canTalk) {
-                    if (!currentTalkEntry) {
-                        if (!startTalkOverlay(animationState, skeletonData)) {
-                            speechBubbleController?.handleTalkState(false);
-                            return;
-                        }
-                    }
-                    speechBubbleController?.handleTalkState(true);
+
+                const interruptedByMovement = !stationary
+                    || player.lieState !== 'none'
+                    || player.fidgetState !== 'none';
+                if (talkTransitionController?.isActive()) {
+                    stopTalkOverlay({ immediate: interruptedByMovement });
+                } else if (!talkTransitionController && currentTalkEntry) {
+                    clearTalkOverlay();
                 } else {
-                    if (currentTalkEntry) {
-                        clearTalkOverlay();
-                    } else {
-                        speechBubbleController?.handleTalkState(false);
-                    }
-                }
-                if (currentTalkEntry) {
-                    const activeEntry = animationState.getCurrent(TALK_TRACK_INDEX);
-                    if (activeEntry !== currentTalkEntry) {
-                        if (!activeEntry) clearTalkOverlay();
-                        currentTalkEntry = activeEntry || null;
-                    }
+                    talkSpeechActive = false;
+                    speechBubbleController?.handleTalkState(false);
                 }
             }
 

@@ -100,4 +100,5 @@ Do not add ignored artwork with `git add --force`. If the active tile pyramid is
 
 - Always use the local HTTP server; opening `index.html` through `file://` will break module and `fetch` requests.
 - The local Spine runtime is versioned under `vendor/`, so the basic mockup does not rely on a CDN.
+- Talking uses weighted, pose-compatible transitions from `H` (home). Tune clip weights in `TALK_TRANSITION_CLIPS` in `gameCode.js`; the reusable graph/runtime adapter lives in `talkingStateMachine.js`.
 - Never commit an OpenAI API key or place one directly in the browser application. A chatbot that needs a secret must call a secure server-side proxy.
