@@ -7379,6 +7379,7 @@ import { createBeaverNpcController } from './beaverNpc.js';
             let currentTalkAnimationName = '';
             let talkTransitionController = null;
             let talkSpeechActive = false;
+            let manualTalkingActive = false;
             let currentTalkLipSyncEntry = null;
             let talkLipSyncVariantIndex = 0;
             let talkLipSyncSwitchTimer = 0;
@@ -7459,6 +7460,9 @@ import { createBeaverNpcController } from './beaverNpc.js';
 
             function setTouchAction(action, pointerId, active) {
                 if (!action) return;
+                if (active && action !== 'chat' && manualTalkingActive) {
+                    setManualTalkingActive(false);
+                }
                 const pointers = touchActionPointers.get(action) || new Set();
                 if (active) {
                     pointers.add(pointerId);
@@ -8712,6 +8716,13 @@ import { createBeaverNpcController } from './beaverNpc.js';
                 });
             }
 
+            function setManualTalkingActive(active) {
+                manualTalkingActive = Boolean(active);
+                if (playerContainerElement) {
+                    playerContainerElement.dataset.manualTalkingActive = String(manualTalkingActive);
+                }
+            }
+
             function stopTalkOverlay(options = {}) {
                 talkSpeechActive = false;
                 clearTalkLipSyncOverlay();
@@ -8732,6 +8743,7 @@ import { createBeaverNpcController } from './beaverNpc.js';
             }
 
             function clearTalkOverlay() {
+                setManualTalkingActive(false);
                 stopTalkOverlay({ immediate: true });
             }
 
@@ -8774,9 +8786,11 @@ import { createBeaverNpcController } from './beaverNpc.js';
                     return;
                 }
 
-                const talkHeld = isActionActive('chat');
                 const stationary = !player.isMoving && Math.abs(player.vx) < 0.01 && player.onGround && !player.isLandingAnimation;
-                const canTalk = talkHeld && stationary && player.lieState === 'none' && player.fidgetState === 'none';
+                const canTalk = manualTalkingActive
+                    && stationary
+                    && player.lieState === 'none'
+                    && player.fidgetState === 'none';
                 const talkRequested = beaverConversationState.active
                     || Boolean(chatBotController?.isChatting?.())
                     || canTalk;
@@ -9107,6 +9121,7 @@ import { createBeaverNpcController } from './beaverNpc.js';
                 if (player.isMoving) return false;
                 if (Math.abs(player.vx) > FIDGET_SPEED_THRESHOLD || Math.abs(player.vy) > FIDGET_SPEED_THRESHOLD) return false;
                 if (currentTalkEntry) return false;
+                if (manualTalkingActive) return false;
                 if (isActionActive('chat')) return false;
                 if (buildModeEnabled) return false;
                 return true;
@@ -10631,7 +10646,10 @@ import { createBeaverNpcController } from './beaverNpc.js';
             document.addEventListener('mousemove', (event) => {
                 lastMouseX = event.clientX; lastMouseY = event.clientY; updateMouseTrackerDisplay();
             });
-            document.addEventListener('pointerdown', recordUserActivity, { passive: true });
+            document.addEventListener('pointerdown', (event) => {
+                recordUserActivity(event);
+                if (manualTalkingActive) setManualTalkingActive(false);
+            }, { passive: true });
             document.addEventListener('mouseup', stopCameraPan);
             window.addEventListener('blur', stopCameraPan);
             document.addEventListener('keydown', (e) => {
@@ -10665,6 +10683,14 @@ import { createBeaverNpcController } from './beaverNpc.js';
                 if (npcEnabled && chatBotController?.shouldBlockGameInput?.()) { e.preventDefault(); return; }
                 logInputEvent('keydown', { key: rawKey });
                 keys[key] = true;
+                if (key === 't') {
+                    if (!e.repeat) {
+                        e.preventDefault();
+                        setManualTalkingActive(!manualTalkingActive);
+                    }
+                } else if (manualTalkingActive) {
+                    setManualTalkingActive(false);
+                }
                 if (isEmotePlaying()) {
                     const cancelKeys = ['a', 'd', 'arrowleft', 'arrowright', ' ', 'space', 'w', 'arrowup', 'shift', 'shiftleft', 'shiftright'];
                     if (cancelKeys.includes(key)) {
