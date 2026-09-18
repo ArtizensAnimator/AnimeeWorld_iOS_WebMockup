@@ -7070,8 +7070,8 @@ import { createBeaverNpcController } from './beaverNpc.js';
             const SWORD_HITBOX_FLASH_TIME = 0.1;
             const SWORD_HITBOX_FREEZE_DURATION = 0.3;
             const TALK_TRANSITION_CLIPS = Object.freeze([
-                { animation: "GameAnims/Talking/talk_H_H_01", from: 'H', to: 'H', weight: 2 },
-                { animation: "GameAnims/Talking/talk_H_A_01", from: 'H', to: 'A', weight: 2 },
+                { animation: "GameAnims/Talking/talk_H_H_01", from: 'H', to: 'H', weight: 3 },
+                { animation: "GameAnims/Talking/talk_H_A_01", from: 'H', to: 'A', weight: 7 },
                 { animation: "GameAnims/Talking/talk_A_H_01", from: 'A', to: 'H', weight: 5 },
                 { animation: "GameAnims/Talking/talk_A_B_01", from: 'A', to: 'B', weight: 1 },
                 { animation: "GameAnims/Talking/talk_B_C_01", from: 'B', to: 'C', weight: 1 },
