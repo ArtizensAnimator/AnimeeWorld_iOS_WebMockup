@@ -183,8 +183,13 @@ import { createBeaverNpcController } from './beaverNpc.js';
             const CAMERA_VELOCITY_LOOK_AHEAD_SECONDS = 0.06;
             const CAMERA_MAX_LOOK_AHEAD_RATIO = 0.18;
             // Keep Spine/WebGL canvases at a stable resolution while the camera zooms.
-            // Resizing their backing buffers on every wheel event is extremely expensive.
+            // The player upgrades through a few quality tiers after wheel input settles.
             const SPINE_CANVAS_RENDER_ZOOM = IS_NATIVE_IOS ? 0.18 : DEFAULT_ZOOM;
+            const PLAYER_SPINE_RENDER_ZOOM_STEPS = Object.freeze(
+                IS_NATIVE_IOS ? [0.18, 0.25, 0.33, 0.45] : [DEFAULT_ZOOM, 0.8, 1, 1.2]
+            );
+            const PLAYER_SPINE_MAX_BACKING_SIZE = IS_NATIVE_IOS ? 1536 : 4096;
+            const PLAYER_SPINE_QUALITY_SETTLE_MS = 180;
             const ZOOM_WHEEL_DELTA_UNIT = 100;
             const ZOOM_WHEEL_SENSITIVITY = Math.log(1 + ZOOM_STEP) / ZOOM_WHEEL_DELTA_UNIT;
 
@@ -7400,6 +7405,8 @@ import { createBeaverNpcController } from './beaverNpc.js';
             const playerContainerScreen = { left: 0, top: 0, width: 0, height: 0 };
             const playerContainerWorldBounds = { left: 0, top: 0, width: PLAYER_VISUAL_WIDTH, height: PLAYER_VISUAL_HEIGHT };
             let zoomLevel = DEFAULT_ZOOM;
+            let playerSpineRenderZoom = SPINE_CANVAS_RENDER_ZOOM;
+            let playerSpineQualityTimer = 0;
             let pendingZoomWheelDelta = 0;
             let zoomWheelFrame = 0;
             let camera = { x: 0, y: 0, targetX: 0, targetY: 0, lerpFactor: 0.04, kickY: 0, kickDecay: 0.8, offsetX: 0, offsetY: 0, isDragging: false, lastPointerX: 0, lastPointerY: 0 };
@@ -9832,7 +9839,12 @@ import { createBeaverNpcController } from './beaverNpc.js';
                 playerContainerElement.style.height = `${screenHeight}px`;
                 playerContainerElement.dataset.worldX = String(playerCenterX);
                 playerContainerElement.dataset.facing = player.facingRight ? 'left' : 'right';
-                updateSpineRenderSurface(playerContainerElement, containerWidth, containerHeight);
+                updateSpineRenderSurface(
+                    playerContainerElement,
+                    containerWidth,
+                    containerHeight,
+                    playerSpineRenderZoom
+                );
                 if (playerTiltAngleDeg) {
                     const pivotX = (containerWidth * 0.5) * zoomLevel;
                     const pivotY = (containerHeight + FOOT_OFFSET) * zoomLevel;
@@ -10230,16 +10242,23 @@ import { createBeaverNpcController } from './beaverNpc.js';
 
             function clampZoom(value) { return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, value)); }
 
-            function updateSpineRenderSurface(container, worldWidth, worldHeight) {
+            function updateSpineRenderSurface(
+                container,
+                worldWidth,
+                worldHeight,
+                renderZoom = SPINE_CANVAS_RENDER_ZOOM
+            ) {
                 if (!container || !Number.isFinite(worldWidth) || !Number.isFinite(worldHeight)) return;
                 const surface = container.querySelector(':scope > .spine-player');
                 if (!surface) return;
-                const renderWidth = Math.max(1, worldWidth * SPINE_CANVAS_RENDER_ZOOM);
-                const renderHeight = Math.max(1, worldHeight * SPINE_CANVAS_RENDER_ZOOM);
-                const displayScale = zoomLevel / SPINE_CANVAS_RENDER_ZOOM;
+                const safeRenderZoom = Math.max(0.01, Number(renderZoom) || SPINE_CANVAS_RENDER_ZOOM);
+                const renderWidth = Math.max(1, worldWidth * safeRenderZoom);
+                const renderHeight = Math.max(1, worldHeight * safeRenderZoom);
+                const displayScale = zoomLevel / safeRenderZoom;
                 const layoutKey = `${renderWidth}|${renderHeight}|${displayScale}`;
                 if (surface.dataset.gameZoomLayout === layoutKey) return;
                 surface.dataset.gameZoomLayout = layoutKey;
+                surface.dataset.gameRenderZoom = String(safeRenderZoom);
                 surface.style.position = 'absolute';
                 surface.style.left = '0';
                 surface.style.top = '0';
@@ -10250,12 +10269,49 @@ import { createBeaverNpcController } from './beaverNpc.js';
                 surface.style.willChange = 'transform';
             }
 
+            function getTargetPlayerSpineRenderZoom() {
+                const deviceScale = Math.max(1, Number(window.devicePixelRatio) || 1);
+                const largestWorldDimension = Math.max(
+                    1,
+                    PLAYER_CONTAINER_SIZE.width,
+                    PLAYER_CONTAINER_SIZE.height
+                );
+                const maximumRenderZoom = Math.max(
+                    SPINE_CANVAS_RENDER_ZOOM,
+                    PLAYER_SPINE_MAX_BACKING_SIZE / (largestWorldDimension * deviceScale)
+                );
+                const desiredRenderZoom = Math.max(
+                    SPINE_CANVAS_RENDER_ZOOM,
+                    Math.min(zoomLevel, maximumRenderZoom)
+                );
+                const qualityStep = PLAYER_SPINE_RENDER_ZOOM_STEPS.find(
+                    step => step >= desiredRenderZoom - 0.001
+                ) || PLAYER_SPINE_RENDER_ZOOM_STEPS[PLAYER_SPINE_RENDER_ZOOM_STEPS.length - 1];
+                return Math.max(
+                    SPINE_CANVAS_RENDER_ZOOM,
+                    Math.min(qualityStep, maximumRenderZoom)
+                );
+            }
+
+            function schedulePlayerSpineQualityRefresh() {
+                if (playerSpineQualityTimer) clearTimeout(playerSpineQualityTimer);
+                playerSpineQualityTimer = setTimeout(() => {
+                    playerSpineQualityTimer = 0;
+                    const targetRenderZoom = getTargetPlayerSpineRenderZoom();
+                    if (Math.abs(targetRenderZoom - playerSpineRenderZoom) < 0.001) return;
+                    playerSpineRenderZoom = targetRenderZoom;
+                    updatePlayerContainerPosition();
+                    requestAnimationFrame(() => spinePlayer?.resize?.());
+                }, PLAYER_SPINE_QUALITY_SETTLE_MS);
+            }
+
             function setZoom(newZoom) {
                 const clamped = clampZoom(newZoom);
                 if (clamped !== zoomLevel) {
                     zoomLevel = clamped;
                     updateTextBoxContainers();
                     updateMouseTrackerDisplay(); updatePlayerContainerPosition();
+                    schedulePlayerSpineQualityRefresh();
                 }
             }
 
