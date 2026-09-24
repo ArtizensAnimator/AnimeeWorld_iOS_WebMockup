@@ -16,6 +16,76 @@
         };
     }
 
+    function discoverPoseTransitionClips(animationNames, options = {}) {
+        const homePose = String(options.homePose || 'H');
+        const pattern = options.pattern instanceof RegExp
+            ? options.pattern
+            : /(?:^|\/)talk_([A-Za-z0-9]+)_([A-Za-z0-9]+)_([0-9]+)$/;
+        const categoryWeights = Object.assign({
+            homeSelf: 3,
+            homeExit: 7,
+            self: 2,
+            homeReturn: 2,
+            explore: 8
+        }, options.categoryWeights || {});
+        const discovered = [];
+
+        (Array.isArray(animationNames) ? animationNames : []).forEach(animationName => {
+            if (typeof animationName !== 'string') return;
+            pattern.lastIndex = 0;
+            const match = pattern.exec(animationName);
+            if (!match) return;
+            discovered.push({
+                animation: animationName,
+                from: match[1],
+                to: match[2],
+                iteration: Number(match[3]) || 0
+            });
+        });
+
+        const outgoingEdges = new Map();
+        discovered.forEach(clip => {
+            const edgeKey = `${clip.from}>${clip.to}`;
+            if (!outgoingEdges.has(clip.from)) outgoingEdges.set(clip.from, new Map());
+            const edges = outgoingEdges.get(clip.from);
+            if (!edges.has(edgeKey)) edges.set(edgeKey, []);
+            edges.get(edgeKey).push(clip);
+        });
+
+        const weightedClips = [];
+        outgoingEdges.forEach((edges, from) => {
+            const edgeGroups = [...edges.values()];
+            const categories = new Map();
+            edgeGroups.forEach(group => {
+                const to = group[0].to;
+                let category;
+                if (from === homePose) category = to === homePose ? 'homeSelf' : 'homeExit';
+                else if (to === from) category = 'self';
+                else if (to === homePose) category = 'homeReturn';
+                else category = 'explore';
+                if (!categories.has(category)) categories.set(category, []);
+                categories.get(category).push(group);
+            });
+
+            categories.forEach((groups, category) => {
+                const categoryWeight = Math.max(0.001, Number(categoryWeights[category]) || 1);
+                const edgeWeight = categoryWeight / groups.length;
+                groups.forEach(group => {
+                    group.sort((a, b) => a.iteration - b.iteration || a.animation.localeCompare(b.animation));
+                    const variantWeight = edgeWeight / group.length;
+                    group.forEach(clip => weightedClips.push(Object.freeze({
+                        animation: clip.animation,
+                        from: clip.from,
+                        to: clip.to,
+                        weight: variantWeight
+                    })));
+                });
+            });
+        });
+
+        return weightedClips;
+    }
+
     class PoseTransitionStateMachine {
         constructor(options = {}) {
             this.homePose = String(options.homePose || 'H');
@@ -27,6 +97,12 @@
             this.pose = this.homePose;
             this.active = false;
             this.currentClip = null;
+            this.recentLimit = Math.max(1, Number(options.recentLimit) || 4);
+            this.edgeRepeatPenalty = Math.max(0.01, Number(options.edgeRepeatPenalty) || 0.15);
+            this.variantRepeatPenalty = Math.max(0.01, Number(options.variantRepeatPenalty) || 0.08);
+            this.recentAnimations = [];
+            this.recentEdges = [];
+            this.selectionCounts = new Map();
         }
 
         setAvailableAnimations(animationNames) {
@@ -82,7 +158,12 @@
             if (this.currentClip) return this.currentClip;
             if (!this.active) {
                 if (this.pose === this.homePose) return null;
-                this.currentClip = this.findHomewardClip(this.pose);
+                const homewardClip = this.findHomewardClip(this.pose);
+                if (!homewardClip) return null;
+                const variants = this.getOutgoingClips(this.pose).filter(
+                    clip => clip.to === homewardClip.to
+                );
+                this.currentClip = this.pickVariant(variants);
                 return this.currentClip;
             }
 
@@ -94,13 +175,65 @@
 
         pickWeighted(clips) {
             if (!clips.length) return null;
-            const totalWeight = clips.reduce((sum, clip) => sum + clip.weight, 0);
+            const edgeGroups = new Map();
+            clips.forEach(clip => {
+                const edgeKey = this.getEdgeKey(clip);
+                if (!edgeGroups.has(edgeKey)) edgeGroups.set(edgeKey, []);
+                edgeGroups.get(edgeKey).push(clip);
+            });
+            const lastEdge = this.recentEdges[this.recentEdges.length - 1] || '';
+            const weightedEdges = [...edgeGroups.entries()].map(([edgeKey, variants]) => ({
+                edgeKey,
+                variants,
+                weight: variants.reduce((sum, clip) => sum + clip.weight, 0)
+                    * (edgeKey === lastEdge ? this.edgeRepeatPenalty : 1)
+            }));
+            const selectedEdge = this.pickByWeight(weightedEdges);
+            return selectedEdge ? this.pickVariant(selectedEdge.variants) : null;
+        }
+
+        pickVariant(clips) {
+            if (!clips.length) return null;
+            const weightedVariants = clips.map(clip => {
+                const selectionCount = this.selectionCounts.get(clip.animation) || 0;
+                const recentlyUsed = this.recentAnimations.includes(clip.animation);
+                return {
+                    clip,
+                    weight: (1 / (selectionCount + 1))
+                        * (recentlyUsed ? this.variantRepeatPenalty : 1)
+                };
+            });
+            const selectedVariant = this.pickByWeight(weightedVariants);
+            const selectedClip = selectedVariant?.clip || null;
+            if (selectedClip) this.recordSelection(selectedClip);
+            return selectedClip;
+        }
+
+        pickByWeight(items) {
+            if (!items.length) return null;
+            const totalWeight = items.reduce((sum, item) => sum + Math.max(0, item.weight), 0);
             let cursor = Math.max(0, Math.min(0.999999999, Number(this.random()) || 0)) * totalWeight;
-            for (const clip of clips) {
-                cursor -= clip.weight;
-                if (cursor < 0) return clip;
+            for (const item of items) {
+                cursor -= Math.max(0, item.weight);
+                if (cursor < 0) return item;
             }
-            return clips[clips.length - 1];
+            return items[items.length - 1];
+        }
+
+        getEdgeKey(clip) {
+            return `${clip.from}>${clip.to}`;
+        }
+
+        recordSelection(clip) {
+            const edgeKey = this.getEdgeKey(clip);
+            this.selectionCounts.set(
+                clip.animation,
+                (this.selectionCounts.get(clip.animation) || 0) + 1
+            );
+            this.recentAnimations.push(clip.animation);
+            this.recentEdges.push(edgeKey);
+            if (this.recentAnimations.length > this.recentLimit) this.recentAnimations.shift();
+            if (this.recentEdges.length > this.recentLimit) this.recentEdges.shift();
         }
 
         findHomewardClip(startPose) {
@@ -128,7 +261,8 @@
                 active: this.active,
                 pose: this.pose,
                 currentAnimation: this.currentClip?.animation || '',
-                homePose: this.homePose
+                homePose: this.homePose,
+                discoveredClipCount: this.clips.length
             };
         }
     }
@@ -240,6 +374,7 @@
     }
 
     global.WeightedTalking = Object.freeze({
+        discoverPoseTransitionClips,
         PoseTransitionStateMachine,
         SpineTalkingController
     });

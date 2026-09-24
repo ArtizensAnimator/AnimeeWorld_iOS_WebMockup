@@ -7074,19 +7074,16 @@ import { createBeaverNpcController } from './beaverNpc.js';
             const SWORD_HITBOX_VERTICAL_OFFSET = -200;
             const SWORD_HITBOX_FLASH_TIME = 0.1;
             const SWORD_HITBOX_FREEZE_DURATION = 0.3;
-            const TALK_TRANSITION_CLIPS = Object.freeze([
-                { animation: "GameAnims/Talking/talk_H_H_01", from: 'H', to: 'H', weight: 3 },
-                { animation: "GameAnims/Talking/talk_H_A_01", from: 'H', to: 'A', weight: 7 },
-                { animation: "GameAnims/Talking/talk_A_H_01", from: 'A', to: 'H', weight: 5 },
-                { animation: "GameAnims/Talking/talk_A_B_01", from: 'A', to: 'B', weight: 1 },
-                { animation: "GameAnims/Talking/talk_B_C_01", from: 'B', to: 'C', weight: 1 },
-                { animation: "GameAnims/Talking/talk_C_A_01", from: 'C', to: 'A', weight: 4 },
-                { animation: "GameAnims/Talking/talk_C_D_01", from: 'C', to: 'D', weight: 1 },
-                { animation: "GameAnims/Talking/talk_D_E_01", from: 'D', to: 'E', weight: 1 },
-                { animation: "GameAnims/Talking/talk_E_F_01", from: 'E', to: 'F', weight: 1 },
-                { animation: "GameAnims/Talking/talk_F_G_01", from: 'F', to: 'G', weight: 1 },
-                { animation: "GameAnims/Talking/talk_G_A_01", from: 'G', to: 'A', weight: 1 }
-            ].map(Object.freeze));
+            const TALK_TRANSITION_DISCOVERY_OPTIONS = Object.freeze({
+                homePose: 'H',
+                categoryWeights: Object.freeze({
+                    homeSelf: 3,
+                    homeExit: 7,
+                    self: 2,
+                    homeReturn: 2,
+                    explore: 8
+                })
+            });
             const TALK_FALLBACK_ANIMATION_NAMES = Object.freeze([
                 "GameAnims/game_talkLoop_neutral",
                 "GameAnims/Talking/game_talkLoop_excited_ALLSEGMENTS"
@@ -8669,16 +8666,29 @@ import { createBeaverNpcController } from './beaverNpc.js';
 
             function createTalkTransitionController(animationState, skeletonData) {
                 const talkingApi = window.WeightedTalking;
-                if (!talkingApi?.PoseTransitionStateMachine || !talkingApi?.SpineTalkingController) return null;
+                if (!talkingApi?.discoverPoseTransitionClips
+                    || !talkingApi?.PoseTransitionStateMachine
+                    || !talkingApi?.SpineTalkingController) return null;
 
                 const availableAnimationNames = Array.isArray(skeletonData.animations)
                     ? skeletonData.animations.map(animation => animation?.name).filter(Boolean)
                     : [];
+                const transitionClips = talkingApi.discoverPoseTransitionClips(
+                    availableAnimationNames,
+                    TALK_TRANSITION_DISCOVERY_OPTIONS
+                );
                 const machine = new talkingApi.PoseTransitionStateMachine({
                     homePose: 'H',
-                    clips: TALK_TRANSITION_CLIPS
+                    clips: transitionClips,
+                    recentLimit: 4,
+                    edgeRepeatPenalty: 0.15,
+                    variantRepeatPenalty: 0.08
                 }).setAvailableAnimations(availableAnimationNames);
                 if (!machine.hasPlayableGraph()) return null;
+                if (playerContainerElement) {
+                    playerContainerElement.dataset.talkTransitionClipCount = String(transitionClips.length);
+                }
+                console.info(`[Talking] Discovered ${transitionClips.length} pose-transition clips.`);
 
                 return new talkingApi.SpineTalkingController({
                     machine,

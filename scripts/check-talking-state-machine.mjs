@@ -1,6 +1,10 @@
 import '../talkingStateMachine.js';
 
-const { PoseTransitionStateMachine, SpineTalkingController } = globalThis.WeightedTalking;
+const {
+    discoverPoseTransitionClips,
+    PoseTransitionStateMachine,
+    SpineTalkingController
+} = globalThis.WeightedTalking;
 
 const clips = [
     { animation: 'H_H', from: 'H', to: 'H', weight: 8 },
@@ -19,6 +23,35 @@ const clips = [
 function assert(condition, message) {
     if (!condition) throw new Error(message);
 }
+
+const discoveredClips = discoverPoseTransitionClips([
+    'GameAnims/Talking/talk_H_H_01',
+    'GameAnims/Talking/talk_H_H_02',
+    'GameAnims/Talking/talk_H_A_01',
+    'GameAnims/Talking/talk_H_A_02',
+    'GameAnims/Talking/talk_A_H_01',
+    'GameAnims/Talking/talk_A_B_01',
+    'GameAnims/Talking/talk_B_C_01',
+    'GameAnims/not-a-transition'
+]);
+assert(discoveredClips.length === 7, 'Every correctly named transition iteration should be discovered.');
+const sumEdgeWeight = (from, to) => discoveredClips
+    .filter(clip => clip.from === from && clip.to === to)
+    .reduce((sum, clip) => sum + clip.weight, 0);
+assert(sumEdgeWeight('H', 'H') === 3, 'H_H variants should share the 30% home weight.');
+assert(sumEdgeWeight('H', 'A') === 7, 'H_A variants should share the 70% home-exit weight.');
+assert(discoveredClips.find(clip => clip.animation.endsWith('talk_H_A_02')), 'New iterations should require no code entry.');
+
+const variantRandomValues = [0, 0, 0, 0.999];
+const variantMachine = new PoseTransitionStateMachine({
+    clips: discoveredClips,
+    random: () => variantRandomValues.shift() ?? 0.5
+});
+assert(variantMachine.start().animation.endsWith('talk_H_H_01'), 'The first H_H iteration should be playable.');
+assert(
+    variantMachine.complete('GameAnims/Talking/talk_H_H_01').animation.endsWith('talk_H_H_02'),
+    'Recent-variant suppression should explore another iteration of the same edge.'
+);
 
 const subtleMachine = new PoseTransitionStateMachine({ clips, random: () => 0 });
 assert(subtleMachine.start().animation === 'H_H', 'The highest-weight H clip should be selectable.');
