@@ -75,7 +75,7 @@ import { createBeaverNpcController } from './beaverNpc.js';
 
             // MARK: - --- Game Constants and VARIABLES ---
             const IS_NATIVE_IOS = window.Capacitor?.getPlatform?.() === 'ios';
-            const CHARACTER_SKEL_URL = 'spine stuff/chibi-2.skel';
+            const CHARACTER_SKEL_URL = 'spine stuff/chibi-8.skel';
             const CHARACTER_ATLAS_URL = IS_NATIVE_IOS
                 ? 'spine stuff/chibi-mobile.atlas'
                 : 'spine stuff/chibi.atlas';
